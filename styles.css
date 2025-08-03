@@ -309,3 +309,35 @@ footer .socials a {
   object-fit: contain;
   margin-bottom: 10px;
 }
+#cart-bar {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  padding: 1rem;
+  font-weight: bold;
+  z-index: 998;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+#cart-bar span {
+  flex: 1;
+  padding-left: 10px;
+}
+
+#cart-bar button {
+  background: white;
+  color: var(--primary);
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 10px;
+}
