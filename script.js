@@ -1,5 +1,3 @@
-console.log("Script is running");
-
 const WA_NUMBER = "9779808467134";
 let products = [];
 let cart = [];
@@ -7,7 +5,7 @@ let appliedCoupon = null;
 
 const COUPONS = {
   "TAKEMORE": { type: "percent", value: 10 },
-  "SAVE50":   { type: "flat", value: 50 }
+  "SAVE50": { type: "flat", value: 50 }
 };
 
 const REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsi2u5dqotT4RdHBf1Ftc7iRSiQoOL4V2JyHxtulGiWrAd3m8JlTn5XuQ2WoISdGKqPdzCtMLMmWT-/pub?output=csv";
@@ -57,9 +55,8 @@ function renderProducts(list) {
 
 function openModal(index) {
   const p = products[index];
-  const modal = document.getElementById("modal-body");
   const discount = Math.round((1 - p.discountedPrice / p.originalPrice) * 100);
-
+  const modal = document.getElementById("modal-body");
   modal.innerHTML = `
     <h2>${p.name}</h2>
     <img id="modal-main-img" src="images/${p.mainImage}" style="width:100%;border-radius:8px;" />
@@ -67,87 +64,36 @@ function openModal(index) {
       <span class="original">रु ${p.originalPrice}</span>
       <span class="discounted">रु ${p.discountedPrice}</span>
     </div>
-    <p style="margin:10px 0;color:#555;">${p.description || "No description available."}</p>
+    <p style="margin:10px 0;color:#ccc;">${p.description || "No description."}</p>
     <div class="badge">${p.availability}</div>
     <div class="badge discount-badge">${discount}% OFF</div>
     <p>Product Code: <strong>${p.code}</strong></p>
     <input type="text" id="refer-single" placeholder="Enter Refer Code" style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
-    <button onclick="buyNow(${index}, true)"
-            style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">
-      Order via WhatsApp
-    </button>
-    <div class="thumbs" style="display:flex;gap:8px;overflow-x:auto;margin-top:1rem;">
-      ${p.images.map(img => 
-        `<img src="images/${img}" onclick="changeModalImage('images/${img}')" 
-         style="width:60px;height:60px;border-radius:5px;cursor:pointer;border:2px solid #ccc;" />`
-      ).join('')}
-    </div>
+    <button onclick="buyNow(${index}, true)" style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">Order via WhatsApp</button>
+    <div class="thumbs">${p.images.map(img => `<img src="images/${img}" onclick="changeModalImage('images/${img}')" />`).join('')}</div>
   `;
   document.getElementById("product-modal").classList.remove("hidden");
-
   loadReviewsFor(p.code);
-}
-
-function loadReviewsFor(code) {
-  const reviewBtn = document.querySelector(".review-btn");
-  if (reviewBtn) reviewBtn.href = REVIEW_FORM_BASE + encodeURIComponent(code);
-
-  fetch(REVIEW_CSV)
-    .then(res => res.text())
-    .then(csv => {
-      const results = Papa.parse(csv, { header: true }).data;
-      const filtered = results.filter(r => r.product_code === code);
-      const container = document.getElementById("review-list");
-      if (!container) return;
-
-      if (filtered.length === 0) {
-        container.innerHTML = "<p>No reviews yet.</p>";
-        return;
-      }
-
-      container.innerHTML = filtered.map(r => {
-        const stars = "★".repeat(Number(r.rating)) + "☆".repeat(5 - Number(r.rating));
-        return `
-          <div class="review-item">
-            <strong>${r.name}</strong> <span class="review-stars">${stars}</span><br/>
-            <small>${r.comment}</small>
-          </div>
-        `;
-      }).join("");
-    });
 }
 
 function closeModal() {
   document.getElementById("product-modal").classList.add("hidden");
 }
 
-window.addEventListener("click", function (e) {
-  const modal = document.getElementById("product-modal");
-  if (e.target === modal) closeModal();
-});
-
 function changeModalImage(imgSrc) {
   const mainImg = document.getElementById("modal-main-img");
   if (mainImg) mainImg.src = imgSrc;
 }
 
-document.getElementById("search").addEventListener("input", e => {
-  const keyword = e.target.value.toLowerCase();
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(keyword) ||
-    p.code.toLowerCase().includes(keyword)
-  );
-  renderProducts(filtered);
-});
+function toggleCart() {
+  document.getElementById("cart-drawer").classList.toggle("open");
+}
 
 function addToCart(index) {
   const p = products[index];
   const found = cart.find(item => item.code === p.code);
-  if (found) {
-    found.qty++;
-  } else {
-    cart.push({ ...p, qty: 1 });
-  }
+  if (found) found.qty++;
+  else cart.push({ ...p, qty: 1 });
   updateCartUI();
 }
 
@@ -155,7 +101,6 @@ function updateCartUI() {
   const cartBar = document.getElementById("cart-summary");
   const drawer = document.getElementById("cart-items");
   drawer.innerHTML = '';
-
   let total = 0;
   cart.forEach((item, i) => {
     total += item.qty * item.discountedPrice;
@@ -171,15 +116,11 @@ function updateCartUI() {
       </div>
     `;
   });
-
   if (appliedCoupon) {
-    if (appliedCoupon.type === "percent") {
-      total = Math.round(total * (1 - appliedCoupon.value / 100));
-    } else {
-      total = Math.max(0, total - appliedCoupon.value);
-    }
+    total = appliedCoupon.type === "percent"
+      ? Math.round(total * (1 - appliedCoupon.value / 100))
+      : Math.max(0, total - appliedCoupon.value);
   }
-
   cartBar.textContent = `${cart.length} items | रु ${total}`;
   document.getElementById("cart-total").textContent = `Total: रु ${total}`;
 }
@@ -195,10 +136,6 @@ function removeItem(i) {
   updateCartUI();
 }
 
-function toggleCart() {
-  document.getElementById("cart-drawer").classList.toggle("open");
-}
-
 function applyCoupon() {
   const code = document.getElementById("coupon-input").value.trim().toUpperCase();
   if (COUPONS[code]) {
@@ -211,16 +148,6 @@ function applyCoupon() {
   updateCartUI();
 }
 
-function buyNow(index, fromModal = false) {
-  const p = products[index];
-  const refer = fromModal
-    ? document.getElementById("refer-single").value.trim()
-    : prompt("Enter Refer Code:");
-  const msg = `Hi, I'm interested in:\nProduct: ${p.name}\nCode: ${p.code}\nPrice: रु ${p.discountedPrice}\nRefer Code: ${refer}`;
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-}
-
 function checkoutWhatsApp() {
   const refer = prompt("Enter your Refer Code:");
   if (cart.length === 0) return alert("Cart is empty.");
@@ -229,18 +156,48 @@ function checkoutWhatsApp() {
     msg += `• ${item.name} (Code: ${item.code}) x${item.qty} = रु ${item.qty * item.discountedPrice}\n`;
   });
   let total = cart.reduce((sum, item) => sum + item.qty * item.discountedPrice, 0);
-
   if (appliedCoupon) {
     msg += `\nCoupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
-    if (appliedCoupon.type === "percent") {
-      total = Math.round(total * (1 - appliedCoupon.value / 100));
-    } else {
-      total = Math.max(0, total - appliedCoupon.value);
-    }
+    total = appliedCoupon.type === "percent"
+      ? Math.round(total * (1 - appliedCoupon.value / 100))
+      : Math.max(0, total - appliedCoupon.value);
   }
-
-  msg += `\nTotal: रु ${total}`;
-  msg += `\nRefer Code: ${refer || "N/A"}`;
+  msg += `\nTotal: रु ${total}\nRefer Code: ${refer || "N/A"}`;
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
+  document.getElementById("cart-drawer").classList.remove("open");
 }
+
+function loadReviewsFor(code) {
+  const reviewBtn = document.querySelector(".review-btn");
+  if (reviewBtn) reviewBtn.href = REVIEW_FORM_BASE + encodeURIComponent(code);
+  fetch(REVIEW_CSV)
+    .then(res => res.text())
+    .then(csv => {
+      const data = Papa.parse(csv, { header: true }).data;
+      const container = document.getElementById("review-list");
+      const reviews = data.filter(r => r.product_code === code);
+      if (!reviews.length) return container.innerHTML = "<p>No reviews yet.</p>";
+      container.innerHTML = reviews.map(r => {
+        const stars = "★".repeat(Number(r.rating)) + "☆".repeat(5 - Number(r.rating));
+        return `<div class="review-item"><strong>${r.name}</strong> <span class="review-stars">${stars}</span><br/><small>${r.comment}</small></div>`;
+      }).join('');
+    });
+}
+
+document.getElementById("search").addEventListener("input", e => {
+  const keyword = e.target.value.toLowerCase();
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(keyword) || p.code.toLowerCase().includes(keyword)
+  );
+  renderProducts(filtered);
+});
+
+// 🌙 Dark Mode Toggle Button
+const darkBtn = document.createElement("button");
+darkBtn.textContent = "🌙 Toggle Dark Mode";
+darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
+document.body.appendChild(darkBtn);
+darkBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});

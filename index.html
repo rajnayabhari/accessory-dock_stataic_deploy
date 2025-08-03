@@ -18,41 +18,35 @@
 
   <main id="products" class="product-grid"></main>
 
-  <!-- ✅ Cart Summary Bar -->
   <div id="cart-bar">
     <span id="cart-summary">0 items | रु 0</span>
     <button onclick="toggleCart()">🛒 View Cart</button>
   </div>
 
-  <!-- ✅ Cart Drawer -->
   <div id="cart-drawer" class="drawer hidden">
     <div class="drawer-header">
       <h2>Your Cart</h2>
-      <button onclick="toggleCart()">✕</button>
+      <button onclick="toggleCart()">×</button>
     </div>
     <div id="cart-items"></div>
-
     <div class="coupon-section">
       <input type="text" id="coupon-input" placeholder="Enter Coupon Code" />
       <button onclick="applyCoupon()">Apply</button>
       <p id="coupon-feedback"></p>
     </div>
-
     <div class="drawer-footer">
       <p id="cart-total">Total: रु 0</p>
       <button onclick="checkoutWhatsApp()">Checkout on WhatsApp</button>
     </div>
   </div>
 
-  <!-- ✅ Product Modal -->
   <div id="product-modal" class="modal hidden">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <div id="modal-body"></div>
-
-      <div id="reviews-section" style="margin-top:1.5rem;">
+      <div id="reviews-section">
         <h3>Customer Reviews</h3>
-        <div id="review-list" style="margin: 10px 0;"></div>
+        <div id="review-list"></div>
         <a href="#" target="_blank" class="review-btn">✍️ Write a Review</a>
       </div>
     </div>
