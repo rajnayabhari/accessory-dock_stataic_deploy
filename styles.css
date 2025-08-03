@@ -31,22 +31,32 @@ input[type="text"] {
   width: 40%;
   min-width: 200px;
 }
-
 nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.75rem;
+  padding: 1rem;
   justify-content: center;
+  background: #f1f1f1;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 nav button {
   padding: 0.5rem 1rem;
-  background: #ddd;
+  background: #00a859;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
   cursor: pointer;
+  transition: background 0.2s;
 }
+
+nav button:hover {
+  background: #007e44;
+}
+
 
 main {
   display: grid;
@@ -111,7 +121,8 @@ button {
 footer {
   padding: 1rem;
   text-align: center;
-  background: #eee;
+  background: #00a859; /* green restored */
+  color: white;
   font-size: 0.9rem;
 }
 
