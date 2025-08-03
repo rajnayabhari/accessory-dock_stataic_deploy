@@ -302,3 +302,10 @@ footer .socials a {
   text-decoration: none;
   border-radius: 5px;
 }
+.logo {
+  height: 40px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
