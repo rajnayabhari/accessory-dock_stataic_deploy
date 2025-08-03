@@ -1,46 +1,46 @@
 [
- {
-  "name": "MyPower SnapCharge 10K – MagSafe Edition",
-  "code": "PB004",
-  "originalPrice": 3199,
-  "discountedPrice": 2899,
-  "availability": "In Stock",
-  "category": "Power",
-  "mainImage": "snapcharge-main.JPG",
-  "images": [
-    "snapcharge-1.JPG",
-    "snapcharge-2.JPG",
-    "snapcharge-3.JPG"
-  ]
-},
-
- {
-  "name": "Marshall Willen Mini – Bold Sound, Big Freedom",
-  "code": "SP101",
-  "originalPrice": 6499,
-  "discountedPrice": 5499,
-  "availability": "Limited",
-  "category": "Audio",
-  "mainImage": "willen-main.JPG",
-  "images": [
-    "willen-1.JPG",
-    "willen-2.JPG",
-    "willen-3.JPG"
-  ]
-}
-,
   {
-  "name": "Soundcore P20i – BassUP Edition Wireless Earbuds",
-  "code": "EP120",
-  "originalPrice": 4999,
-  "discountedPrice": 3799,
-  "availability": "In Stock",
-  "category": "Audio",
-  "mainImage": "p20i-main.JPG",
-  "images": [
-    "p20i-1.JPG",
-    "p20i-2.JPG"
-  ]
-}
-
+    "name": "MyPower SnapCharge 10K – MagSafe Edition",
+    "code": "PB004",
+    "originalPrice": 3199,
+    "discountedPrice": 2899,
+    "availability": "In Stock",
+    "category": "Power",
+    "mainImage": "snapcharge-main.JPG",
+    "images": [
+      "snapcharge-1.JPG",
+      "snapcharge-2.JPG",
+      "snapcharge-3.JPG"
+    ],
+    "description": "A compact 10,000mAh power bank with MagSafe support, dual USB-C ports, and LED indicators. Ideal for iPhones and Android devices."
+  },
+  {
+    "name": "Marshall Willen Mini – Bold Sound, Big Freedom",
+    "code": "SP101",
+    "originalPrice": 6499,
+    "discountedPrice": 5499,
+    "availability": "Limited",
+    "category": "Audio",
+    "mainImage": "willen-main.JPG",
+    "images": [
+      "willen-1.JPG",
+      "willen-2.JPG",
+      "willen-3.JPG"
+    ],
+    "description": "Ultra-portable Bluetooth speaker with signature Marshall sound, rugged IP67 waterproof build, and 15+ hour battery life."
+  },
+  {
+    "name": "Soundcore P20i – BassUP Edition Wireless Earbuds",
+    "code": "EP120",
+    "originalPrice": 4999,
+    "discountedPrice": 3799,
+    "availability": "In Stock",
+    "category": "Audio",
+    "mainImage": "p20i-main.JPG",
+    "images": [
+      "p20i-1.JPG",
+      "p20i-2.JPG"
+    ],
+    "description": "Wireless earbuds featuring deep BassUp audio, 30-hour battery life, customizable sound via app, and IPX5 water resistance."
+  }
 ]

@@ -1,6 +1,6 @@
 console.log("Script is running");
 
-const WA_NUMBER = "9779808467134"; // ✅ Nepali number, no '+' or '0'
+const WA_NUMBER = "9779808467134";
 let products = [];
 let cart = [];
 let appliedCoupon = null;
@@ -67,6 +67,7 @@ function openModal(index) {
       <span class="original">रु ${p.originalPrice}</span>
       <span class="discounted">रु ${p.discountedPrice}</span>
     </div>
+    <p style="margin:10px 0;color:#555;">${p.description || "No description available."}</p>
     <div class="badge">${p.availability}</div>
     <div class="badge discount-badge">${discount}% OFF</div>
     <p>Product Code: <strong>${p.code}</strong></p>
