@@ -121,6 +121,11 @@ function closeModal() {
   document.getElementById("product-modal").classList.add("hidden");
 }
 
+window.addEventListener("click", function (e) {
+  const modal = document.getElementById("product-modal");
+  if (e.target === modal) closeModal();
+});
+
 function changeModalImage(imgSrc) {
   const mainImg = document.getElementById("modal-main-img");
   if (mainImg) mainImg.src = imgSrc;
