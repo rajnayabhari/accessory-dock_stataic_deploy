@@ -1,3 +1,5 @@
+// script.js
+
 const WA_NUMBER = "9779808467134";
 let products = [];
 let cart = [];
@@ -11,13 +13,33 @@ const COUPONS = {
 const REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsi2u5dqotT4RdHBf1Ftc7iRSiQoOL4V2JyHxtulGiWrAd3m8JlTn5XuQ2WoISdGKqPdzCtMLMmWT-/pub?output=csv";
 const REVIEW_FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSfJu0EwLHe42cz3qPRZjL0rc-SlNG2ajDuBEvTdCIwPiUsTBA/viewform?usp=pp_url&entry.296520128=";
 
-fetch("products.json")
-  .then(res => res.json())
-  .then(data => {
-    products = data;
-    renderCategories(data);
-    renderProducts(data);
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("products.json")
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+      renderCategories(data);
+      renderProducts(data);
+    });
+
+  document.getElementById("search").addEventListener("input", e => {
+    const keyword = e.target.value.toLowerCase();
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(keyword) ||
+      p.code.toLowerCase().includes(keyword)
+    );
+    renderProducts(filtered);
   });
+
+  // 🌙 Dark Mode Toggle Button
+  const darkBtn = document.createElement("button");
+  darkBtn.textContent = "🌙 Toggle Dark Mode";
+  darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
+  document.body.appendChild(darkBtn);
+  darkBtn.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+  });
+});
 
 function renderCategories(data) {
   const categories = [...new Set(data.map(p => p.category))];
@@ -70,7 +92,12 @@ function openModal(index) {
     <p>Product Code: <strong>${p.code}</strong></p>
     <input type="text" id="refer-single" placeholder="Enter Refer Code" style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
     <button onclick="buyNow(${index}, true)" style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">Order via WhatsApp</button>
-    <div class="thumbs">${p.images.map(img => `<img src="images/${img}" onclick="changeModalImage('images/${img}')" />`).join('')}</div>
+    <div class="thumbs" style="display:flex;gap:8px;overflow-x:auto;margin-top:1rem;">
+      ${p.images.map(img => 
+        `<img src="images/${img}" onclick="changeModalImage('images/${img}')" 
+         style="width:60px;height:60px;border-radius:5px;cursor:pointer;border:2px solid #ccc;" />`
+      ).join('')}
+    </div>
   `;
   document.getElementById("product-modal").classList.remove("hidden");
   loadReviewsFor(p.code);
@@ -168,6 +195,16 @@ function checkoutWhatsApp() {
   document.getElementById("cart-drawer").classList.remove("open");
 }
 
+function buyNow(index, fromModal = false) {
+  const p = products[index];
+  const qty = 1;
+  const refer = fromModal ? document.getElementById("refer-single").value : prompt("Enter your Refer Code:");
+  const msg = `Hi, I want to order:\n${p.name} (Code: ${p.code}) x${qty} = रु ${p.discountedPrice * qty}\nRefer Code: ${refer || "N/A"}`;
+  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
+  if (fromModal) closeModal();
+}
+
 function loadReviewsFor(code) {
   const reviewBtn = document.querySelector(".review-btn");
   if (reviewBtn) reviewBtn.href = REVIEW_FORM_BASE + encodeURIComponent(code);
@@ -184,20 +221,3 @@ function loadReviewsFor(code) {
       }).join('');
     });
 }
-
-document.getElementById("search").addEventListener("input", e => {
-  const keyword = e.target.value.toLowerCase();
-  const filtered = products.filter(p =>
-    p.name.toLowerCase().includes(keyword) || p.code.toLowerCase().includes(keyword)
-  );
-  renderProducts(filtered);
-});
-
-// 🌙 Dark Mode Toggle Button
-const darkBtn = document.createElement("button");
-darkBtn.textContent = "🌙 Toggle Dark Mode";
-darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
-document.body.appendChild(darkBtn);
-darkBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-});
