@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Accessory Dock</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -18,7 +18,7 @@
 
   <main id="products"></main>
 
-  <!-- Modal for product details -->
+  <!-- Product Detail Modal -->
   <div id="product-modal" class="modal hidden">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal()">×</span>
@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <!-- Cart Sidebar -->
+  <!-- Cart Drawer -->
   <aside id="cart-drawer">
     <h3>Cart</h3>
     <div id="cart-items"></div>
@@ -39,6 +39,9 @@
     <p id="cart-total">Total: रु 0</p>
     <button onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
   </aside>
+
+  <!-- Cart overlay for click-to-close -->
+  <div id="cart-overlay" class="cart-overlay hidden" onclick="toggleCart()"></div>
 
   <footer>
     <p id="cart-summary">0 items | रु 0</p>

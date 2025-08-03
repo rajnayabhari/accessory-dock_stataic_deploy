@@ -17,6 +17,7 @@ header {
   background: #222;
   padding: 1rem;
   color: white;
+  flex-wrap: wrap;
 }
 
 .logo {
@@ -28,6 +29,7 @@ input[type="text"] {
   border-radius: 4px;
   border: none;
   width: 40%;
+  min-width: 200px;
 }
 
 nav {
@@ -48,7 +50,7 @@ nav button {
 
 main {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
   padding: 1rem;
 }
@@ -129,7 +131,8 @@ footer {
   box-shadow: -2px 0 5px rgba(0,0,0,0.2);
   padding: 1rem;
   transition: right 0.3s ease;
-  z-index: 1000;
+  z-index: 1001;
+  overflow-y: auto;
 }
 
 #cart-drawer.open {
@@ -158,6 +161,21 @@ footer {
 #coupon-breakdown {
   font-weight: bold;
   margin-top: 0.5rem;
+}
+
+/* Overlay */
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+.cart-overlay.hidden {
+  display: none;
 }
 
 /* Modal */
@@ -198,4 +216,20 @@ footer {
   padding-top: 0.5rem;
   margin-top: 0.5rem;
   font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  nav button,
+  button {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+
+  .logo {
+    height: 32px;
+  }
 }
