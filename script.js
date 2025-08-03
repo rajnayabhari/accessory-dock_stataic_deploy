@@ -1,52 +1,42 @@
-// script.js
-
+// --- Config ---
 const WA_NUMBER = "9779808467134";
-let products = [];
-let cart = [];
-let appliedCoupon = null;
-
-const COUPONS = {
-  "TAKEMORE": { type: "percent", value: 10 },
-  "SAVE50": { type: "flat", value: 50 }
-};
-
+const COUPON_API = "https://script.google.com/macros/s/AKfycbzUBut_TJeDW744eL6BaMhRwcWjzcL5aGyolRe3iAzCoNMTaxA2lHaJ6w87_Q8bPAuciQ/exec";
 const REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsi2u5dqotT4RdHBf1Ftc7iRSiQoOL4V2JyHxtulGiWrAd3m8JlTn5XuQ2WoISdGKqPdzCtMLMmWT-/pub?output=csv";
 const REVIEW_FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSfJu0EwLHe42cz3qPRZjL0rc-SlNG2ajDuBEvTdCIwPiUsTBA/viewform?usp=pp_url&entry.296520128=";
 
-document.addEventListener("DOMContentLoaded", () => {
-  fetch("products.json")
-    .then(res => res.json())
-    .then(data => {
-      products = data;
-      renderCategories(data);
-      renderProducts(data);
-    });
+let products = [];
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+let appliedCoupon = null;
+let validCoupons = [];
 
-  document.getElementById("search").addEventListener("input", e => {
-    const keyword = e.target.value.toLowerCase();
-    const filtered = products.filter(p =>
-      p.name.toLowerCase().includes(keyword) ||
-      p.code.toLowerCase().includes(keyword)
-    );
-    renderProducts(filtered);
-  });
-
-  // 🌙 Dark Mode Toggle Button
-  const darkBtn = document.createElement("button");
-  darkBtn.textContent = "🌙 Toggle Dark Mode";
-  darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
-  document.body.appendChild(darkBtn);
-  darkBtn.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-  });
+// --- Initialization ---
+fetch("products.json").then(r => r.json()).then(data => {
+  products = data;
+  renderCategories(data);
+  renderProducts(data);
+  updateCartUI();
 });
+fetchCoupons();
+
+function fetchCoupons() {
+  fetch(COUPON_API)
+    .then(res => res.json())
+    .then(data => { validCoupons = data; });
+}
+
+// --- Cart Persistence ---
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 
 function renderCategories(data) {
   const categories = [...new Set(data.map(p => p.category))];
   const nav = document.getElementById("categories");
-  nav.innerHTML = `<button onclick="renderProducts(products)">All</button>` +
+  nav.innerHTML = '<button onclick="renderProducts(products)">All</button>' +
     categories.map(cat => `<button onclick="filterByCategory('${cat}')">${cat}</button>`).join('');
 }
+
+
 
 function filterByCategory(cat) {
   const filtered = products.filter(p => p.category === cat);
@@ -77,8 +67,8 @@ function renderProducts(list) {
 
 function openModal(index) {
   const p = products[index];
-  const discount = Math.round((1 - p.discountedPrice / p.originalPrice) * 100);
   const modal = document.getElementById("modal-body");
+  const discount = Math.round((1 - p.discountedPrice / p.originalPrice) * 100);
   modal.innerHTML = `
     <h2>${p.name}</h2>
     <img id="modal-main-img" src="images/${p.mainImage}" style="width:100%;border-radius:8px;" />
@@ -86,18 +76,26 @@ function openModal(index) {
       <span class="original">रु ${p.originalPrice}</span>
       <span class="discounted">रु ${p.discountedPrice}</span>
     </div>
-    <p style="margin:10px 0;color:#ccc;">${p.description || "No description."}</p>
+    <p style="margin:10px 0;color:#555;">${p.description || "No description available."}</p>
     <div class="badge">${p.availability}</div>
     <div class="badge discount-badge">${discount}% OFF</div>
     <p>Product Code: <strong>${p.code}</strong></p>
     <input type="text" id="refer-single" placeholder="Enter Refer Code" style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
-    <button onclick="buyNow(${index}, true)" style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">Order via WhatsApp</button>
+    <button onclick="buyNow(${index}, true)"
+            style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">
+      Order via WhatsApp
+    </button>
     <div class="thumbs" style="display:flex;gap:8px;overflow-x:auto;margin-top:1rem;">
       ${p.images.map(img => 
         `<img src="images/${img}" onclick="changeModalImage('images/${img}')" 
          style="width:60px;height:60px;border-radius:5px;cursor:pointer;border:2px solid #ccc;" />`
       ).join('')}
     </div>
+    <div id="review-list" style="margin-top:1rem;"></div>
+    <a target="_blank" class="review-btn" href="${REVIEW_FORM_BASE + encodeURIComponent(p.code)}" 
+       style="display:inline-block;margin-top:1rem;text-align:center;background:#007bff;padding:0.5rem;color:white;border-radius:4px;">
+       Write a Review
+    </a>
   `;
   document.getElementById("product-modal").classList.remove("hidden");
   loadReviewsFor(p.code);
@@ -112,6 +110,31 @@ function changeModalImage(imgSrc) {
   if (mainImg) mainImg.src = imgSrc;
 }
 
+function loadReviewsFor(code) {
+  fetch(REVIEW_CSV)
+    .then(res => res.text())
+    .then(csv => {
+      const results = Papa.parse(csv, { header: true }).data;
+      const filtered = results.filter(r => r.product_code === code);
+      const container = document.getElementById("review-list");
+      if (!container) return;
+
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No reviews yet.</p>";
+        return;
+      }
+
+      container.innerHTML = filtered.map(r => {
+        const stars = "★".repeat(Number(r.rating)) + "☆".repeat(5 - Number(r.rating));
+        return `
+          <div class="review-item">
+            <strong>${r.name}</strong> <span class="review-stars">${stars}</span><br/>
+            <small>${r.comment}</small>
+          </div>
+        `;
+      }).join("");
+    });
+}
 function toggleCart() {
   document.getElementById("cart-drawer").classList.toggle("open");
 }
@@ -119,8 +142,25 @@ function toggleCart() {
 function addToCart(index) {
   const p = products[index];
   const found = cart.find(item => item.code === p.code);
-  if (found) found.qty++;
-  else cart.push({ ...p, qty: 1 });
+  if (found) {
+    found.qty++;
+  } else {
+    cart.push({ ...p, qty: 1 });
+  }
+  saveCart();
+  updateCartUI();
+}
+
+function changeQty(i, delta) {
+  cart[i].qty += delta;
+  if (cart[i].qty < 1) cart.splice(i, 1);
+  saveCart();
+  updateCartUI();
+}
+
+function removeItem(i) {
+  cart.splice(i, 1);
+  saveCart();
   updateCartUI();
 }
 
@@ -129,6 +169,7 @@ function updateCartUI() {
   const drawer = document.getElementById("cart-items");
   drawer.innerHTML = '';
   let total = 0;
+
   cart.forEach((item, i) => {
     total += item.qty * item.discountedPrice;
     drawer.innerHTML += `
@@ -143,35 +184,36 @@ function updateCartUI() {
       </div>
     `;
   });
-  if (appliedCoupon) {
-    total = appliedCoupon.type === "percent"
-      ? Math.round(total * (1 - appliedCoupon.value / 100))
-      : Math.max(0, total - appliedCoupon.value);
+
+  const breakdown = document.getElementById("coupon-breakdown");
+  if (appliedCoupon && breakdown) {
+    const before = total;
+    if (appliedCoupon.type === "percent") {
+      total = Math.round(total * (1 - appliedCoupon.value / 100));
+    } else {
+      total = Math.max(0, total - appliedCoupon.value);
+    }
+    breakdown.innerText = `Before: रु ${before} → After applying "${appliedCoupon.code}": रु ${total}`;
+  } else if (breakdown) {
+    breakdown.innerText = "";
   }
+
   cartBar.textContent = `${cart.length} items | रु ${total}`;
   document.getElementById("cart-total").textContent = `Total: रु ${total}`;
 }
 
-function changeQty(i, delta) {
-  cart[i].qty += delta;
-  if (cart[i].qty < 1) cart.splice(i, 1);
-  updateCartUI();
-}
-
-function removeItem(i) {
-  cart.splice(i, 1);
-  updateCartUI();
-}
-
 function applyCoupon() {
   const code = document.getElementById("coupon-input").value.trim().toUpperCase();
-  if (COUPONS[code]) {
-    appliedCoupon = COUPONS[code];
-    document.getElementById("coupon-feedback").textContent = `Coupon applied: ${code}`;
-  } else {
-    appliedCoupon = null;
-    document.getElementById("coupon-feedback").textContent = `Invalid coupon`;
-  }
+  const msg = document.getElementById("coupon-feedback");
+  appliedCoupon = null;
+
+  const coupon = validCoupons.find(c => c.code === code);
+  if (!coupon) return msg.innerText = "❌ Invalid coupon";
+  if (new Date(coupon.expires) < new Date()) return msg.innerText = "⏰ Coupon expired";
+  if (Number(coupon.used) >= Number(coupon.maxUses)) return msg.innerText = "⚠️ Usage limit reached";
+
+  appliedCoupon = coupon;
+  msg.innerText = `✅ ${coupon.code} applied`;
   updateCartUI();
 }
 
@@ -184,40 +226,43 @@ function checkoutWhatsApp() {
   });
   let total = cart.reduce((sum, item) => sum + item.qty * item.discountedPrice, 0);
   if (appliedCoupon) {
-    msg += `\nCoupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
-    total = appliedCoupon.type === "percent"
-      ? Math.round(total * (1 - appliedCoupon.value / 100))
-      : Math.max(0, total - appliedCoupon.value);
+    msg += `\nCoupon: ${appliedCoupon.code}`;
+    if (appliedCoupon.type === "percent") {
+      total = Math.round(total * (1 - appliedCoupon.value / 100));
+    } else {
+      total = Math.max(0, total - appliedCoupon.value);
+    }
+    // auto-decrement usage via script
+    fetch(COUPON_API + "?used=" + appliedCoupon.code);
   }
-  msg += `\nTotal: रु ${total}\nRefer Code: ${refer || "N/A"}`;
+  msg += `\nTotal: रु ${total}`;
+  msg += `\nRefer Code: ${refer || "N/A"}`;
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
+
+  // Clear cart
+  cart = [];
+  appliedCoupon = null;
+  saveCart();
+  updateCartUI();
   document.getElementById("cart-drawer").classList.remove("open");
 }
 
-function buyNow(index, fromModal = false) {
-  const p = products[index];
-  const qty = 1;
-  const refer = fromModal ? document.getElementById("refer-single").value : prompt("Enter your Refer Code:");
-  const msg = `Hi, I want to order:\n${p.name} (Code: ${p.code}) x${qty} = रु ${p.discountedPrice * qty}\nRefer Code: ${refer || "N/A"}`;
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-  if (fromModal) closeModal();
-}
+// Dark mode toggle
+const darkBtn = document.createElement("button");
+darkBtn.textContent = "🌙 Toggle Dark Mode";
+darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
+document.body.appendChild(darkBtn);
+darkBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});
 
-function loadReviewsFor(code) {
-  const reviewBtn = document.querySelector(".review-btn");
-  if (reviewBtn) reviewBtn.href = REVIEW_FORM_BASE + encodeURIComponent(code);
-  fetch(REVIEW_CSV)
-    .then(res => res.text())
-    .then(csv => {
-      const data = Papa.parse(csv, { header: true }).data;
-      const container = document.getElementById("review-list");
-      const reviews = data.filter(r => r.product_code === code);
-      if (!reviews.length) return container.innerHTML = "<p>No reviews yet.</p>";
-      container.innerHTML = reviews.map(r => {
-        const stars = "★".repeat(Number(r.rating)) + "☆".repeat(5 - Number(r.rating));
-        return `<div class="review-item"><strong>${r.name}</strong> <span class="review-stars">${stars}</span><br/><small>${r.comment}</small></div>`;
-      }).join('');
-    });
-}
+// Live search
+document.getElementById("search").addEventListener("input", e => {
+  const keyword = e.target.value.toLowerCase();
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(keyword) ||
+    p.code.toLowerCase().includes(keyword)
+  );
+  renderProducts(filtered);
+});
