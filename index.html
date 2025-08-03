@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Accessory Dock</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+  <header>
+    <img src="images/logo.png" alt="Logo" class="logo" />
+    <h1>The Accessory Dock</h1>
+    <input type="text" id="search" placeholder="Search accessories..." />
+  </header>
+
+  <nav id="categories"></nav>
+
+  <main id="products" class="product-grid"></main>
+
+  <!-- 🛒 Fixed Bottom Cart Bar -->
+  <div id="cart-bar">
+    <span id="cart-summary">0 items | रु 0</span>
+    <button onclick="toggleCart()">🛒 View Cart</button>
+  </div>
+
+  <!-- 🛍️ Cart Drawer -->
+  <div id="cart-drawer" class="drawer hidden">
+    <div class="drawer-header">
+      <h2>Your Cart</h2>
+      <button onclick="toggleCart()">✕</button>
+    </div>
+    <div id="cart-items"></div>
+
+    <div class="coupon-section">
+      <input type="text" id="coupon-input" placeholder="Enter Coupon Code" />
+      <button onclick="applyCoupon()">Apply</button>
+      <p id="coupon-feedback"></p>
+    </div>
+
+    <div class="drawer-footer">
+      <p id="cart-total">Total: रु 0</p>
+      <button onclick="checkoutWhatsApp()">Checkout on WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- Product Modal -->
+  <div id="product-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="modal-body"></div>
+
+      <div id="reviews-section" style="margin-top:1.5rem;">
+        <h3>Customer Reviews</h3>
+        <div id="review-list" style="margin: 10px 0;"></div>
+        <a href="https://forms.gle/xeLqxc66twrztTUAA" target="_blank" class="review-btn">✍️ Write a Review</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 The Accessory Dock</p>
+<div class="socials">
+  <a href="https://wa.me/97798084671634" target="_blank">WhatsApp</a>
+  <a href="https://www.instagram.com/theaccessorydock" target="_blank">Instagram</a>
+</div>
+
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
