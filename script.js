@@ -44,18 +44,19 @@ function renderProducts(list) {
   container.innerHTML = '';
   list.forEach((p, i) => {
     const discount = Math.round((1 - p.discountedPrice / p.originalPrice) * 100);
+    const isOut = p.availability.toLowerCase() !== "in stock";
     container.innerHTML += `
-      <div class="product-card">
-        <img src="images/${p.mainImage}" onclick="openModal(${i})" />
+      <div class="product-card ${isOut ? 'out-of-stock' : ''}">
+        <img src="images/${p.mainImage}" loading="lazy" alt="${p.name}" onclick="openModal(${i})" />
         <h3>${p.name}</h3>
         <div class="price">
           <span class="original">रु ${p.originalPrice}</span>
           <span class="discounted">रु ${p.discountedPrice}</span>
         </div>
-        <div class="badge">${p.availability}</div>
+        <div class="badge ${isOut ? 'badge-out' : ''}">${p.availability}</div>
         <div class="badge discount-badge">${discount}% OFF</div>
-        <button onclick="addToCart(${i})">Add to Cart</button>
-        <button onclick="buyNow(${i})" style="background:#25D366;color:white;margin-top:5px;">Buy Now</button>
+        <button onclick="addToCart(${i})" ${isOut ? 'disabled' : ''}>Add to Cart</button>
+        <button onclick="buyNow(${i})" style="background:#25D366;color:white;margin-top:5px;" ${isOut ? 'disabled' : ''}>Buy Now</button>
       </div>
     `;
   });
@@ -67,7 +68,7 @@ function openModal(index) {
   const modal = document.getElementById("modal-body");
   modal.innerHTML = `
     <h2>${p.name}</h2>
-    <img id="modal-main-img" src="images/${p.mainImage}" style="width:100%;border-radius:8px;" />
+    <img id="modal-main-img" src="images/${p.mainImage}" style="width:100%;border-radius:8px;" loading="lazy" alt="${p.name}" />
     <div class="price">
       <span class="original">रु ${p.originalPrice}</span>
       <span class="discounted">रु ${p.discountedPrice}</span>
@@ -76,14 +77,14 @@ function openModal(index) {
     <div class="badge">${p.availability}</div>
     <div class="badge discount-badge">${discount}% OFF</div>
     <p>Product Code: <strong>${p.code}</strong></p>
-    <input type="text" id="refer-single" placeholder="Enter Refer Code" style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
+    <input type="text" id="modal-refer-input" placeholder="Enter Refer Code" style="width:100%;padding:0.5rem;margin:0.5rem 0;" />
     <button onclick="buyNow(${index})"
             style="width:100%;padding:0.75rem;background:#25D366;color:white;font-weight:bold;border:none;border-radius:5px;">
       Order via WhatsApp
     </button>
     <div class="thumbs" style="display:flex;gap:8px;overflow-x:auto;margin-top:1rem;">
       ${p.images.map(img => 
-        `<img src="images/${img}" onclick="changeModalImage('images/${img}')" 
+        `<img src="images/${img}" loading="lazy" alt="Thumbnail of ${p.name}" onclick="changeModalImage('images/${img}')" 
          style="width:60px;height:60px;border-radius:5px;cursor:pointer;border:2px solid #ccc;" />`
       ).join('')}
     </div>
@@ -104,18 +105,6 @@ function closeModal() {
 function changeModalImage(imgSrc) {
   const mainImg = document.getElementById("modal-main-img");
   if (mainImg) mainImg.src = imgSrc;
-}
-
-function addToCart(index) {
-  const p = products[index];
-  const found = cart.find(item => item.code === p.code);
-  if (found) {
-    found.qty++;
-  } else {
-    cart.push({ ...p, qty: 1 });
-  }
-  updateCartUI();
-  saveCart();
 }
 
 function updateCartUI() {
@@ -192,7 +181,7 @@ function applyCoupon() {
 }
 
 function checkoutWhatsApp() {
-  const refer = prompt("Enter your Refer Code:");
+  const refer = document.getElementById('cart-refer-input')?.value || '';
   if (cart.length === 0) return alert("Cart is empty.");
   let msg = `Hi, I want to order the following items:
 `;
@@ -205,7 +194,8 @@ function checkoutWhatsApp() {
   let total = cart.reduce((sum, item) => sum + item.qty * item.discountedPrice, 0);
 
   if (appliedCoupon) {
-    msg += `\nCoupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
+    msg += `
+Coupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
     if (appliedCoupon.type === "percent") {
       total = Math.round(total * (1 - appliedCoupon.value / 100));
     } else {
@@ -213,13 +203,14 @@ function checkoutWhatsApp() {
     }
   }
 
-  msg += `\nTotal: रु ${total}`;
-  msg += `\nRefer Code: ${refer || "N/A"}`;
+  msg += `
+Total: रु ${total}`;
+  msg += `
+Refer Code: ${refer || "N/A"}`;
 
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
 
-  // Reset cart after checkout
   cart = [];
   appliedCoupon = null;
   saveCart();
@@ -229,7 +220,7 @@ function checkoutWhatsApp() {
 
 function buyNow(index) {
   const p = products[index];
-  const refer = prompt("Enter your Refer Code (or leave blank):");
+  const refer = document.getElementById('modal-refer-input')?.value || '';
   let msg = `Hi, I want to order:
 
 ${p.name}
@@ -277,7 +268,6 @@ document.getElementById("search").addEventListener("input", e => {
   renderProducts(filtered);
 });
 
-// 🌙 Dark Mode Toggle
 const darkBtn = document.createElement("button");
 darkBtn.textContent = "🌙 Toggle Dark Mode";
 darkBtn.style.cssText = "position:fixed;bottom:10px;right:10px;padding:0.5rem;background:#222;color:#fff;border:none;border-radius:5px;z-index:9999;cursor:pointer;";
@@ -285,3 +275,15 @@ document.body.appendChild(darkBtn);
 darkBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
 });
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.classList.add("hidden"), 300);
+  }, 2000);
+}
