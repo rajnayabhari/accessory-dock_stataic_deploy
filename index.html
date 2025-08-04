@@ -27,18 +27,26 @@
   </div>
 
   <!-- Cart Drawer -->
-  <aside id="cart-drawer">
-    <h3>Cart</h3>
-    <div id="cart-items"></div>
-    <div id="coupon-section">
-      <input id="coupon-input" type="text" placeholder="Enter coupon code" />
-      <button onclick="applyCoupon()">Apply</button>
-      <p id="coupon-feedback"></p>
-      <p id="coupon-breakdown"></p>
-    </div>
-    <p id="cart-total">Total: रु 0</p>
-    <button onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
-  </aside>
+<aside id="cart-drawer">
+  <h3>Cart</h3>
+  <div id="cart-items"></div>
+
+  <!-- Refer Code Field -->
+  <div style="margin-top: 1rem;">
+    <input id="cart-refer-input" type="text" placeholder="Enter Refer Code" />
+  </div>
+
+  <div id="coupon-section">
+    <input id="coupon-input" type="text" placeholder="Enter coupon code" />
+    <button onclick="applyCoupon()">Apply</button>
+    <p id="coupon-feedback"></p>
+    <p id="coupon-breakdown"></p>
+  </div>
+
+  <p id="cart-total">Total: रु 0</p>
+  <button onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
+</aside>
+
 
   <!-- Cart overlay for click-to-close -->
   <div id="cart-overlay" class="cart-overlay hidden" onclick="toggleCart()"></div>
