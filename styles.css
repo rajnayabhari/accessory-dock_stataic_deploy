@@ -31,6 +31,7 @@ input[type="text"] {
   width: 40%;
   min-width: 200px;
 }
+
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -56,7 +57,6 @@ nav button {
 nav button:hover {
   background: #007e44;
 }
-
 
 main {
   display: grid;
@@ -121,7 +121,7 @@ button {
 footer {
   padding: 1rem;
   text-align: center;
-  background: #00a859; /* green restored */
+  background: #00a859;
   color: white;
   font-size: 0.9rem;
 }
@@ -131,7 +131,7 @@ footer {
   margin-bottom: 0.5rem;
 }
 
-/* Cart Drawer */
+/* === Cart Drawer === */
 #cart-drawer {
   position: fixed;
   right: -100%;
@@ -159,6 +159,7 @@ footer {
   margin: 0 4px;
 }
 
+/* === Coupon & Refer === */
 #coupon-section {
   margin-top: 1rem;
 }
@@ -174,7 +175,17 @@ footer {
   margin-top: 0.5rem;
 }
 
-/* Overlay */
+#cart-refer-input,
+#modal-refer-input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* === Overlay === */
 .cart-overlay {
   position: fixed;
   top: 0;
@@ -189,7 +200,7 @@ footer {
   display: none;
 }
 
-/* Modal */
+/* === Modal === */
 .modal {
   position: fixed;
   inset: 0;
@@ -229,6 +240,22 @@ footer {
   font-size: 0.9rem;
 }
 
+/* === Disabled Buttons & Out-of-Stock === */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.badge-out {
+  background: #999;
+  color: white;
+}
+
+.product-card.out-of-stock {
+  opacity: 0.9;
+}
+
+/* === Mobile === */
 @media (max-width: 600px) {
   nav button,
   button {
