@@ -62,6 +62,31 @@ function renderProducts(list) {
   });
 }
 
+function addToCart(index) {
+  const p = products[index];
+  const found = cart.find(item => item.code === p.code);
+  if (found) {
+    found.qty++;
+  } else {
+    cart.push({ ...p, qty: 1 });
+  }
+  updateCartUI();
+  saveCart();
+  showToast("Added to cart");
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.classList.add("hidden"), 300);
+  }, 2000);
+}
+
 function openModal(index) {
   const p = products[index];
   const discount = Math.round((1 - p.discountedPrice / p.originalPrice) * 100);
@@ -183,30 +208,23 @@ function applyCoupon() {
 function checkoutWhatsApp() {
   const refer = document.getElementById('cart-refer-input')?.value || '';
   if (cart.length === 0) return alert("Cart is empty.");
-  let msg = `Hi, I want to order the following items:
-`;
+  let msg = `Hi, I want to order the following items:\n`;
 
   cart.forEach(item => {
-    msg += `• ${item.name} (Code: ${item.code}) x${item.qty} = रु ${item.qty * item.discountedPrice}
-`;
+    msg += `• ${item.name} (Code: ${item.code}) x${item.qty} = रु ${item.qty * item.discountedPrice}\n`;
   });
 
   let total = cart.reduce((sum, item) => sum + item.qty * item.discountedPrice, 0);
 
   if (appliedCoupon) {
-    msg += `
-Coupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
-    if (appliedCoupon.type === "percent") {
-      total = Math.round(total * (1 - appliedCoupon.value / 100));
-    } else {
-      total = Math.max(0, total - appliedCoupon.value);
-    }
+    msg += `\nCoupon applied: ${appliedCoupon.type === 'flat' ? `रु ${appliedCoupon.value}` : `${appliedCoupon.value}% OFF`}`;
+    total = appliedCoupon.type === "percent"
+      ? Math.round(total * (1 - appliedCoupon.value / 100))
+      : Math.max(0, total - appliedCoupon.value);
   }
 
-  msg += `
-Total: रु ${total}`;
-  msg += `
-Refer Code: ${refer || "N/A"}`;
+  msg += `\nTotal: रु ${total}`;
+  msg += `\nRefer Code: ${refer || "N/A"}`;
 
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
@@ -221,14 +239,7 @@ Refer Code: ${refer || "N/A"}`;
 function buyNow(index) {
   const p = products[index];
   const refer = document.getElementById('modal-refer-input')?.value || '';
-  let msg = `Hi, I want to order:
-
-${p.name}
-Code: ${p.code}
-Price: रु ${p.discountedPrice}
-Availability: ${p.availability}
-
-Refer Code: ${refer || "N/A"}`;
+  let msg = `Hi, I want to order:\n\n${p.name}\nCode: ${p.code}\nPrice: रु ${p.discountedPrice}\nAvailability: ${p.availability}\n\nRefer Code: ${refer || "N/A"}`;
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
 }
@@ -275,15 +286,3 @@ document.body.appendChild(darkBtn);
 darkBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
 });
-
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-  toast.classList.add("show");
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.classList.add("hidden"), 300);
-  }, 2000);
-}
