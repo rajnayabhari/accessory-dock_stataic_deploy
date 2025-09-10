@@ -3,53 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#00a859" />
   <title>The Accessory Dock</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <header>
-    <img src="images/logo.png" alt="Logo" class="logo" />
-    <input id="search" type="text" placeholder="Search accessories..." />
-    <button onclick="toggleCart()">🛒 View Cart</button>
+  <header class="site-header">
+    <div class="brand">
+      <img src="images/logo.png" alt="The Accessory Dock" class="logo" />
+      <span class="brand-name">The Accessory Dock</span>
+    </div>
+    <div class="header-actions">
+      <input id="search" type="text" placeholder="Search accessories, codes..." aria-label="Search products" />
+      <button id="cart-toggle-btn" class="cart-btn" aria-label="Open cart">🛒 Cart</button>
+    </div>
   </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Quality Accessories. Great Prices.</h1>
+      <p>Curated audio, power and lifestyle gear — ready to ship.</p>
+    </div>
+  </section>
 
   <nav id="categories"></nav>
 
   <main id="products"></main>
 
   <!-- Product Detail Modal -->
-  <div id="product-modal" class="modal hidden">
+  <div id="product-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">×</span>
+      <span id="modal-close-btn" class="close-btn" aria-label="Close">×</span>
       <div id="modal-body"></div>
     </div>
   </div>
 
+  <!-- Admin UI removed from public page for safety -->
+
   <!-- Cart Drawer -->
-<aside id="cart-drawer">
-  <h3>Cart</h3>
+<aside id="cart-drawer" aria-label="Shopping cart">
+  <h3 class="cart-title">Your Cart</h3>
   <div id="cart-items"></div>
 
   <!-- Refer Code Field -->
-  <div style="margin-top: 1rem;">
+  <div class="mt-1">
     <input id="cart-refer-input" type="text" placeholder="Enter Refer Code" />
   </div>
 
   <div id="coupon-section">
     <input id="coupon-input" type="text" placeholder="Enter coupon code" />
-    <button onclick="applyCoupon()">Apply</button>
+    <button id="coupon-apply-btn">Apply</button>
     <p id="coupon-feedback"></p>
     <p id="coupon-breakdown"></p>
   </div>
 
-  <p id="cart-total">Total: रु 0</p>
-  <button onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
+  <p id="cart-total" class="cart-total">Total: रु 0</p>
+  <button id="checkout-btn" class="checkout-btn">Checkout via WhatsApp</button>
 </aside>
 
 
   <!-- Cart overlay for click-to-close -->
-  <div id="cart-overlay" class="cart-overlay hidden" onclick="toggleCart()"></div>
+  <div id="cart-overlay" class="cart-overlay hidden"></div>
 
   <footer>
     <p id="cart-summary">0 items | रु 0</p>
