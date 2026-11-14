@@ -30,6 +30,8 @@ header {
 
 .logo {
   height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 input[type="text"] {
@@ -247,19 +249,24 @@ footer {
   cursor: pointer;
 }
 
-/* Toast */
+/* Toast Notification */
 .toast {
   position: fixed;
-  bottom: 20px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: rgba(34, 34, 34, 0.9);
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(8px);
   color: #fff;
-  padding: 0.6rem 1rem;
-  border-radius: 4px;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  font-weight: 600;
+  font-size: 0.9rem;
   z-index: 4000;
   opacity: 0;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 
 .toast.show {
@@ -267,10 +274,12 @@ footer {
   transform: translateX(-50%) translateY(0);
 }
 
-/* Badges and reviews */
+.toast.hidden {
+  display: none !important;
+}
+
+/* Badges and helper classes */
 .badge-out { background: #e53935; color: #fff; }
-.review-item { padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-.review-stars { color: #ffb300; }
 
 /* Dark mode surfaces */
 .dark-mode header { background: #1a1a1a; }
@@ -278,11 +287,43 @@ footer {
 .dark-mode .product-card { background: #1e1e1e; color: #eee; box-shadow: 0 0 4px rgba(255,255,255,0.04); }
 .dark-mode .modal-content { background: #1f1f1f; color: #eee; }
 .dark-mode input[type="text"] { background: #2a2a2a; color: #eee; }
-/* Modal and product helper classes for CSP-safe UI (no inline styles) */
-.modal-main-img { width: 100%; border-radius: 8px; }
-.modal-desc { margin: 10px 0; color: #555; }
-.thumbs { display: flex; gap: 8px; overflow-x: auto; margin-top: 1rem; }
-.thumb { width: 60px; height: 60px; border-radius: 5px; cursor: pointer; border: 2px solid #ccc; }
+
+/* Modal and product helper classes */
+.modal-main-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #f1f5f9;
+}
+.modal-desc { margin: 12px 0; color: #475569; line-height: 1.5; }
+.thumbs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-top: 1rem;
+  padding: 4px 2px 8px;
+}
+.thumbs::-webkit-scrollbar { height: 5px; }
+.thumbs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.thumb:hover {
+  transform: translateY(-2px);
+  border-color: #94a3b8;
+}
+.thumb.selected {
+  border-color: var(--brand, #00a859);
+  box-shadow: 0 0 0 2px rgba(0, 168, 89, 0.3);
+}
 .btn-whatsapp { background: #25D366; color: #fff; }
 .btn-block { width: 100%; padding: 0.75rem; font-weight: bold; border-radius: 5px; }
 .product-card .btn-whatsapp { margin-top: 5px; }
@@ -351,31 +392,6 @@ button:disabled {
   opacity: 0.9;
 }
 
-/* Toast Notification */
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(34, 34, 34, 0.9);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 30px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  font-weight: bold;
-  z-index: 4000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.toast.show {
-  opacity: 1;
-}
-
-.toast.hidden {
-  display: none;
-}
-
 /* Mobile */
 @media (max-width: 600px) {
   nav button,
@@ -390,6 +406,8 @@ button:disabled {
 
   .logo {
     height: 32px;
+    width: auto;
+    object-fit: contain;
   }
 }
 

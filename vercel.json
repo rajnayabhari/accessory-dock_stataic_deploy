@@ -1,5 +1,13 @@
 {
   "framework": null,
   "buildCommand": null,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/admin(.*)",
+      "destination": "/404",
+      "permanent": false
+    }
+  ]
 }
+

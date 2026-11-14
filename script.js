@@ -1,4 +1,4 @@
-const WA_NUMBER = "9779808467134";
+const WA_NUMBER = "9779761806448";
 let products = [];
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 let appliedCoupon = null;
@@ -19,8 +19,6 @@ const formatPrice = (v) => `रु ${Number(v || 0).toLocaleString('ne-NP')}`;
 
 const findProductByCode = (code) => products.find(p => p.code === code);
 
-const REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTsi2u5dqotT4RdHBf1Ftc7iRSiQoOL4V2JyHxtulGiWrAd3m8JlTn5XuQ2WoISdGKqPdzCtMLMmWT-/pub?output=csv";
-const REVIEW_FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSfJu0EwLHe42cz3qPRZjL0rc-SlNG2ajDuBEvTdCIwPiUsTBA/viewform?usp=pp_url&entry.296520128=";
 const COUPONS = {
   "TAKEMORE": { type: "percent", value: 10 },
   "SAVE50": { type: "flat", value: 50 }
@@ -136,6 +134,10 @@ function openModal(code) {
   const safeDesc = escapeHTML(p.description || "No description available.");
   const safeAvail = escapeHTML(p.availability || "");
   const safeCode = escapeHTML(p.code);
+
+  // Include mainImage and any additional gallery images without duplicates
+  const allImages = [p.mainImage, ...(p.images || [])].filter((img, idx, arr) => img && arr.indexOf(img) === idx);
+
   modal.innerHTML = `
     <h2 id="modal-title">${safeName}</h2>
     <img id="modal-main-img" class="modal-main-img" src="images/${p.mainImage}" loading="lazy" alt="${safeName}" />
@@ -149,18 +151,15 @@ function openModal(code) {
     <p>Product Code: <strong>${safeCode}</strong></p>
     <input type="text" id="modal-refer-input" placeholder="Enter Refer Code" />
     <button class="btn-whatsapp btn-block" data-buy-code='${escapeJS(p.code)}'>Order via WhatsApp</button>
-    <div class="thumbs">
-      ${p.images.map(img => 
-        `<img class="thumb" src="images/${img}" loading="lazy" alt="Thumbnail of ${safeName}" data-img-src="images/${img}" />`
-      ).join('')}
-    </div>
-    <div id="review-list" class="review-list"></div>
-    <a target="_blank" rel="noopener noreferrer" class="review-btn" href="${REVIEW_FORM_BASE + encodeURIComponent(p.code)}">
-       Write a Review
-    </a>
+    ${allImages.length > 1 ? `
+      <div class="thumbs">
+        ${allImages.map((img, i) => 
+          `<img class="thumb ${i === 0 ? 'selected' : ''}" src="images/${img}" loading="lazy" alt="Thumbnail ${i + 1} of ${safeName}" data-img-src="images/${img}" />`
+        ).join('')}
+      </div>
+    ` : ''}
   `;
   document.getElementById("product-modal").classList.remove("hidden");
-  loadReviewsFor(p.code);
 }
 
 function closeModal() {
@@ -287,40 +286,6 @@ function buyNow(code) {
   window.open(url, "_blank");
 }
 
-function loadReviewsFor(code) {
-  fetch(REVIEW_CSV)
-    .then(res => res.text())
-    .then(csv => {
-      const results = Papa.parse(csv, { header: true }).data || [];
-      const filtered = results.filter(r => r.product_code === code);
-      const container = document.getElementById("review-list");
-      if (!container) return;
-
-      if (filtered.length === 0) {
-        container.innerHTML = "<p>No reviews yet.</p>";
-        return;
-      }
-
-      container.innerHTML = filtered.map(r => {
-        const name = escapeHTML(r.name || 'Anonymous');
-        const comment = escapeHTML(r.comment || '');
-        const rating = Math.max(0, Math.min(5, Number(r.rating) || 0));
-        const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
-        return `
-          <div class="review-item">
-            <strong>${name}</strong> <span class="review-stars">${stars}</span><br/>
-            <small>${comment}</small>
-          </div>
-        `;
-      }).join("");
-    })
-    .catch(err => {
-      console.warn('Failed to load reviews', err);
-      const container = document.getElementById("review-list");
-      if (container) container.innerHTML = "<p>Could not load reviews.</p>";
-    });
-}
-
 document.getElementById("search").addEventListener("input", e => {
   const keyword = e.target.value.toLowerCase();
   const filtered = products.filter(p =>
@@ -378,6 +343,8 @@ document.getElementById('product-modal').addEventListener('click', (e) => {
   const thumb = e.target.closest('.thumb');
   if (thumb && thumb.dataset.imgSrc) {
     changeModalImage(thumb.dataset.imgSrc);
+    document.querySelectorAll('#product-modal .thumb').forEach(t => t.classList.remove('selected'));
+    thumb.classList.add('selected');
   }
 });
 
