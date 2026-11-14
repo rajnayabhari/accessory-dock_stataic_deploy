@@ -4,6 +4,25 @@ This document tracks all changes, architectural improvements, bug fixes, and fea
 
 ---
 
+## [v1.4.1] – Zero-Overflow Fix for Narrow Mobile Viewports (320px–360px)
+**Date:** 2026-11-14 (19:18 NPT)  
+**Deploy URL:** `https://the-accessory-dock.vercel.app`
+
+### Summary of Changes
+1. **Identified & Resolved Screen Edge Clipping / Overflow:**
+   - **Root Cause:**
+     1. In `.trust-grid`, `grid-template-columns: repeat(2, 1fr)` computed with `minmax(auto, 1fr)`. Unbroken strings in `.trust-content span` ("Express Delivery Across Nepal") forced the trust bar to 470px+ intrinsic width.
+     2. In `.categories-bar`, missing `min-width: 0; width: 100%` allowed horizontal pill content to stretch `.header-inner`.
+     3. In `.header-top`, `.brand` text combined with large button padding pushed the right header action buttons beyond narrow 320px–360px viewports.
+     4. With `overflow-x: hidden` on `body`, the page layout expanded to 470px, silently clipping the right ~120px of the screen (cutting the 2nd card in half and hiding the header buttons).
+2. **Applied Strict Zero-Overflow Rules Across All Mobile Viewports:**
+   - Enforced `min-width: 0; max-width: 100%;` across all containers (`.site-header`, `.header-inner`, `.header-top`, `.brand`, `.brand-text`, `.categories-bar`, `.catalog-section`, `.products-grid`, `.product-card`, `.card-body`, `.trust-bar`, `.trust-grid`, `.trust-item`, `.trust-content`, `.site-footer`).
+   - Standardized `#theme-toggle-btn` and `#cart-toggle-btn` to compact 34px circular icon buttons, freeing up 50px of horizontal room in `.header-top`.
+   - Converted `.trust-grid` to `repeat(2, minmax(0, 1fr))` with strict truncation on text.
+   - Guaranteed that both card columns in `.products-grid` divide the screen exactly 50/50 without any overflow or edge clipping down to 320px.
+
+---
+
 ## [v1.4.0] – Complete Mobile-First Architecture Overhaul & Thumb Ergonomics
 **Date:** 2026-11-14 (19:05 NPT)  
 **Deploy URL:** `https://the-accessory-dock.vercel.app`
