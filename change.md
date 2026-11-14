@@ -4,6 +4,34 @@ This document tracks all changes, architectural improvements, bug fixes, and fea
 
 ---
 
+## [v1.3.0] – Warm Botanical Modernism Design Match & Order Rate Limiting
+**Date:** 2026-11-14 (18:52 NPT)  
+**Deploy URL:** `https://the-accessory-dock.vercel.app`
+
+### Summary of Changes
+1. **Visual Design Match with "Warm Botanical Modernism"**
+   - Adopted the full color and elevation architecture from the Stitch design package:
+     - Warm oat cream canvas (`#FAF7F2` / `#FCF9F4`), elevated pristine white cards (`#FFFFFF`), recessed product display matting (`#F5EFEB`), and deep forest pine (`#1E3A2F`).
+     - Eucalyptus sage accents (`#376847`), warm honey amber for deals (`#D68E2C`), and botanical slate text (`#15241D`).
+   - Integrated **Plus Jakarta Sans** typography across all displays, headings, and body copy.
+   - Replaced all emojis with Google Material Symbols Outlined (`shopping_bag`, `search`, `close`, `verified_user`, `local_shipping`, `sell`, `support_agent`, `delete_outline`, etc.).
+   - Removed all unnecessary marketing fluff and filler text, focusing purely on mobile tech accessories, accurate NPR prices, and instant WhatsApp ordering.
+   - Added the 4 Seal Trust Pillars directly adapted from the brandmark:
+     1. *Genuine Products* (100% Tested Authentic)
+     2. *Fast Delivery* (Express Delivery in Nepal)
+     3. *Affordable Prices* (Direct Consumer Value)
+     4. *Dedicated Support* (Direct WhatsApp Assistance)
+2. **Order Rate Limiting & Duplicate Click Prevention**
+   - Implemented an active order mutex and throttle guard (`ORDER_COOLDOWN_MS = 2500ms`) on both `buyNow()` and `checkoutWhatsApp()`.
+   - Repeatedly tapping the order button locks subsequent calls, displays a "Please wait a moment before sending another order request" toast, and prevents duplicate WhatsApp tabs or multiple order message spam.
+   - Buttons enter an active `.btn-loading` state while the request is being dispatched.
+   - Added a $450\text{ms}$ debounce throttle on `addToCart()` to prevent accidental rapid double-taps from incrementing quantity unintentionally, with temporary "Added ✓" visual feedback.
+3. **Modal & Cart Drawer Polish**
+   - Modal matches the Stitch quick-view layout: clean image display, multi-angle thumbnail selector, bold discount pill, and direct WhatsApp order CTA.
+   - Slide-over cart drawer features itemized summaries, smooth quantity steppers (`+` and `−`), trash icon, live subtotal, and single-click checkout.
+
+---
+
 ## [v1.2.0] – Mobile-First Redesign, Circular Logo & Clean Order Flow
 **Date:** 2026-11-14 (18:37 NPT)  
 **Commit:** `5464000`  

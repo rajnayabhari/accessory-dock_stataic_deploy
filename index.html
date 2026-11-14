@@ -3,88 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
-  <title>The Accessory Dock – Mobile & Tech Accessories Nepal</title>
+  <meta name="theme-color" content="#1e3a2f" />
+  <title>The Accessory Dock | Mobile & Tech Accessories Nepal</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 </head>
 <body>
-  <!-- Header: Mobile-First Responsive Navigation -->
+  <!-- Header -->
   <header class="site-header">
     <div class="header-inner">
       <div class="header-top">
-        <div class="brand">
+        <a class="brand" href="/" aria-label="The Accessory Dock Home">
           <img src="images/logo.png" alt="The Accessory Dock" class="logo" />
-          <span class="brand-name">The Accessory Dock</span>
-        </div>
-        <button id="cart-toggle-btn" class="cart-btn" aria-label="Open cart">
-          🛒 <span class="cart-text">Cart</span>
+          <div class="brand-text">
+            <span class="brand-name">THE ACCESSORY DOCK</span>
+            <span class="brand-tagline">QUALITY WITH AFFORDABILITY</span>
+          </div>
+        </a>
+        <button id="cart-toggle-btn" class="cart-btn" aria-label="Shopping Cart">
+          <span class="material-symbols-outlined icon">shopping_bag</span>
+          <span class="cart-text">Cart</span>
           <span id="cart-badge" class="cart-badge">0</span>
         </button>
       </div>
+
       <div class="header-search">
-        <input id="search" type="search" placeholder="Search accessories, audio, chargers..." aria-label="Search products" autocomplete="off" />
+        <div class="search-input-wrap">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input id="search" type="search" placeholder="Search accessories, docks, audio..." aria-label="Search catalog" autocomplete="off" />
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-inner">
-      <h1>Quality Accessories. Great Prices.</h1>
-      <p>Curated audio, power and lifestyle gear — ready to ship across Nepal.</p>
-      <div class="trust-chips">
-        <span class="trust-chip">🛡️ Genuine Products</span>
-        <span class="trust-chip">⚡ Fast Delivery</span>
-        <span class="trust-chip">💬 WhatsApp Orders</span>
+  <!-- Value Pillars -->
+  <section class="trust-bar" aria-label="Store Guarantees">
+    <div class="trust-grid">
+      <div class="trust-item">
+        <span class="material-symbols-outlined trust-icon">verified_user</span>
+        <div class="trust-content">
+          <strong>Genuine Products</strong>
+          <span>100% Tested Authentic</span>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="material-symbols-outlined trust-icon">local_shipping</span>
+        <div class="trust-content">
+          <strong>Fast Delivery</strong>
+          <span>Express Delivery in Nepal</span>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="material-symbols-outlined trust-icon">sell</span>
+        <div class="trust-content">
+          <strong>Affordable Prices</strong>
+          <span>Direct Consumer Value</span>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="material-symbols-outlined trust-icon">support_agent</span>
+        <div class="trust-content">
+          <strong>Dedicated Support</strong>
+          <span>Direct WhatsApp Assistance</span>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Categories Bar -->
-  <nav id="categories" aria-label="Product categories"></nav>
+  <!-- Category Filter Navigation -->
+  <nav id="categories" class="categories-bar" aria-label="Product categories"></nav>
 
-  <!-- Main Product Grid -->
-  <main id="products" aria-label="Products list"></main>
+  <!-- Product Catalog Grid -->
+  <main class="catalog-section" aria-label="Product Catalog">
+    <div id="products" class="products-grid"></div>
+  </main>
 
   <!-- Product Detail Modal -->
   <div id="product-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-content">
-      <button id="modal-close-btn" class="close-btn" aria-label="Close modal">✕</button>
+      <button id="modal-close-btn" class="modal-close-btn" aria-label="Close details">
+        <span class="material-symbols-outlined">close</span>
+      </button>
       <div id="modal-body"></div>
     </div>
   </div>
 
   <!-- Cart Drawer -->
-  <aside id="cart-drawer" aria-label="Shopping cart">
+  <aside id="cart-drawer" class="cart-drawer" aria-label="Shopping cart">
     <div class="cart-header">
-      <h3 class="cart-title">Your Cart</h3>
-      <button id="cart-close-btn" class="cart-close-btn" aria-label="Close cart">✕</button>
+      <div class="cart-title-wrap">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        <h2 class="cart-title">Your Cart</h2>
+      </div>
+      <button id="cart-close-btn" class="cart-close-btn" aria-label="Close cart">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
+
     <div id="cart-items" class="cart-items-body"></div>
+
     <div class="cart-footer">
       <div class="cart-total-row">
-        <span>Estimated Total:</span>
+        <span>Total:</span>
         <span id="cart-total" class="cart-total">रु 0</span>
       </div>
-      <button id="checkout-btn" class="checkout-btn">Checkout via WhatsApp</button>
+      <button id="checkout-btn" class="btn-checkout">
+        <span class="btn-text">Order via WhatsApp</span>
+        <span class="material-symbols-outlined btn-icon">arrow_forward</span>
+      </button>
+      <p class="cart-note">Instant direct confirmation with store inventory.</p>
     </div>
   </aside>
 
-  <!-- Cart overlay for click-to-close -->
+  <!-- Cart backdrop overlay -->
   <div id="cart-overlay" class="cart-overlay hidden"></div>
 
   <!-- Footer -->
-  <footer>
+  <footer class="site-footer">
     <div class="footer-inner">
-      <p id="cart-summary">0 items | रु 0</p>
-      <p>© The Accessory Dock – Kathmandu, Nepal</p>
+      <div class="footer-brand">
+        <span class="footer-title">THE ACCESSORY DOCK</span>
+        <span class="footer-sub">Mobile &amp; Everyday Tech Essentials</span>
+      </div>
+      <div class="footer-meta">
+        <p id="cart-summary">0 items | रु 0</p>
+        <p class="footer-copyright">&copy; The Accessory Dock. All rights reserved.</p>
+      </div>
     </div>
   </footer>
 
-  <div id="toast" class="toast hidden" role="status">Item added to cart</div>
+  <!-- Toast Notifications -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- Floating Dark Mode Toggle -->
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle visual theme">
+    <span class="material-symbols-outlined">dark_mode</span>
+  </button>
+
   <script src="script.js"></script>
 </body>
 </html>

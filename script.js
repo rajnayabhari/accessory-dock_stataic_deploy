@@ -1,7 +1,14 @@
+// Store Configuration
 const WA_NUMBER = "9779761806448";
 let products = [];
 let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 let activeCategory = "";
+
+// Order Rate-Limiting & Duplicate Prevention State
+let isOrderProcessing = false;
+let lastOrderTime = 0;
+const ORDER_COOLDOWN_MS = 2500;
+const addToCartTimestamps = {};
 
 // Helpers
 const escapeHTML = (str) => String(str || "")
@@ -31,14 +38,16 @@ fetch("products.json")
   .catch(err => {
     console.error("Failed to load products:", err);
     const container = document.getElementById("products");
-    if (container) container.innerHTML = "<p class='error-msg'>Unable to load products. Please check connection and refresh.</p>";
+    if (container) {
+      container.innerHTML = "<p class='state-msg'>Unable to load catalog. Please check your internet connection and refresh.</p>";
+    }
   });
 
 function saveCart() {
   try {
     localStorage.setItem("cart", JSON.stringify(cart));
   } catch (e) {
-    console.warn("Storage full", e);
+    console.warn("Storage quota full", e);
   }
 }
 
@@ -47,19 +56,18 @@ function renderCategories(data) {
   const nav = document.getElementById("categories");
   if (!nav) return;
 
-  nav.innerHTML = `<button class="cat-btn active" data-category="">All Items</button>` +
+  nav.innerHTML = `<button class="cat-pill active" data-category="">All Items</button>` +
     categories.map(cat =>
-      `<button class="cat-btn" data-category="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`
+      `<button class="cat-pill" data-category="${escapeHTML(cat)}">${escapeHTML(cat)}</button>`
     ).join('');
 }
 
 function setCategory(cat) {
   activeCategory = cat || "";
-  document.querySelectorAll(".cat-btn").forEach(btn => {
+  document.querySelectorAll(".cat-pill").forEach(btn => {
     const isTarget = (btn.dataset.category || "") === activeCategory;
     btn.classList.toggle("active", isTarget);
   });
-
   filterAndRender();
 }
 
@@ -89,7 +97,7 @@ function renderProducts(list) {
   if (!container) return;
 
   if (list.length === 0) {
-    container.innerHTML = `<div class="empty-state">No products found matching your search.</div>`;
+    container.innerHTML = `<div class="empty-state"><p>No accessories found matching your criteria.</p></div>`;
     return;
   }
 
@@ -105,25 +113,25 @@ function renderProducts(list) {
 
     return `
       <article class="product-card ${isOut ? 'out-of-stock' : ''}">
-        <div class="card-img-wrap">
+        <div class="card-img-wrap" data-code=${codeArg}>
           <img class="product-image" data-code=${codeArg} src="images/${encodeURI(p.mainImage)}" loading="${loadingAttr}" decoding="async" alt="${safeName}" onerror="this.src='images/logo.png'" />
-          ${discount > 0 ? `<span class="discount-badge">${discount}% OFF</span>` : ''}
+          ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
         </div>
         <div class="card-body">
-          <div class="badge-row">
-            <span class="badge ${isOut ? 'badge-out' : 'badge-in'}">${safeAvail}</span>
-            <span class="product-code">${escapeHTML(p.code)}</span>
+          <div class="card-meta">
+            <span class="badge-stock ${isOut ? 'out' : 'in'}">${safeAvail}</span>
+            <span class="card-code">${escapeHTML(p.code)}</span>
           </div>
           <h3 class="product-title" data-code=${codeArg} title="${safeName}">${safeName}</h3>
-          <div class="price-row">
+          <div class="price-stack">
             <span class="price-discounted">${formatPrice(p.discountedPrice)}</span>
             ${p.originalPrice > p.discountedPrice ? `<span class="price-original">${formatPrice(p.originalPrice)}</span>` : ''}
           </div>
           <div class="card-actions">
-            <button class="btn-add" data-code=${codeArg} ${isOut ? 'disabled' : ''}>
+            <button class="btn-card-add" data-code=${codeArg} ${isOut ? 'disabled' : ''}>
               ${isOut ? 'Out of Stock' : 'Add to Cart'}
             </button>
-            <button class="btn-whatsapp" data-code=${codeArg} ${isOut ? 'disabled' : ''} aria-label="Buy ${safeName} on WhatsApp">
+            <button class="btn-card-buy" data-code=${codeArg} ${isOut ? 'disabled' : ''} aria-label="Direct order ${safeName} on WhatsApp">
               Buy Now
             </button>
           </div>
@@ -135,18 +143,38 @@ function renderProducts(list) {
   container.innerHTML = html;
 }
 
-function addToCart(code) {
+// Add to Cart with Rate Limiting / Debounce
+function addToCart(code, sourceBtn) {
+  const now = Date.now();
+  if (addToCartTimestamps[code] && (now - addToCartTimestamps[code] < 450)) {
+    return; // Ignore rapid accidental double-taps
+  }
+  addToCartTimestamps[code] = now;
+
   const p = findProductByCode(code);
   if (!p) return;
+
   const found = cart.find(item => item.code === p.code);
   if (found) {
     found.qty++;
   } else {
     cart.push({ ...p, qty: 1 });
   }
+
   updateCartUI();
   saveCart();
-  showToast("Added to cart! 🛒");
+  showToast(`Added ${p.name} to cart`);
+
+  // Visual button feedback
+  if (sourceBtn && !sourceBtn.disabled) {
+    const originalText = sourceBtn.textContent;
+    sourceBtn.textContent = "Added ✓";
+    sourceBtn.classList.add("added-feedback");
+    setTimeout(() => {
+      sourceBtn.textContent = originalText;
+      sourceBtn.classList.remove("added-feedback");
+    }, 800);
+  }
 }
 
 function showToast(message) {
@@ -162,6 +190,38 @@ function showToast(message) {
   }, 2200);
 }
 
+// Rate Limiter Guard for WhatsApp Actions
+function checkOrderRateLimit(btnElement) {
+  const now = Date.now();
+  if (isOrderProcessing || (now - lastOrderTime < ORDER_COOLDOWN_MS)) {
+    showToast("Please wait a moment before sending another order request.");
+    return false;
+  }
+
+  isOrderProcessing = true;
+  lastOrderTime = now;
+
+  // Visual button lock state
+  if (btnElement) {
+    const originalHtml = btnElement.innerHTML;
+    btnElement.classList.add("btn-loading");
+    btnElement.disabled = true;
+
+    setTimeout(() => {
+      btnElement.innerHTML = originalHtml;
+      btnElement.classList.remove("btn-loading");
+      btnElement.disabled = false;
+      isOrderProcessing = false;
+    }, ORDER_COOLDOWN_MS);
+  } else {
+    setTimeout(() => {
+      isOrderProcessing = false;
+    }, ORDER_COOLDOWN_MS);
+  }
+
+  return true;
+}
+
 function openModal(code) {
   const p = findProductByCode(code);
   if (!p) return;
@@ -169,47 +229,48 @@ function openModal(code) {
   const discount = p.originalPrice > 0 ? Math.round((1 - p.discountedPrice / p.originalPrice) * 100) : 0;
   const modal = document.getElementById("modal-body");
   const safeName = escapeHTML(p.name);
-  const safeDesc = escapeHTML(p.description || "High quality mobile gear from The Accessory Dock. Fully inspected and tested.");
+  const safeDesc = escapeHTML(p.description || "High quality accessory from The Accessory Dock. Fully inspected for performance and durability.");
   const safeAvail = escapeHTML(p.availability || "In Stock");
   const isOut = (p.availability || '').toLowerCase().includes("out of stock");
   const safeCode = escapeHTML(p.code);
 
-  // Deduplicate gallery images and include main image
   const allImages = [p.mainImage, ...(p.images || [])].filter((img, idx, arr) => img && arr.indexOf(img) === idx);
 
   modal.innerHTML = `
-    <div class="modal-product">
-      <div class="modal-media">
-        <div class="modal-img-container">
+    <div class="modal-product-layout">
+      <div class="modal-gallery">
+        <div class="modal-main-display">
           <img id="modal-main-img" class="modal-main-img" src="images/${encodeURI(p.mainImage)}" alt="${safeName}" onerror="this.src='images/logo.png'" />
-          ${discount > 0 ? `<span class="discount-badge">${discount}% OFF</span>` : ''}
+          ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
         </div>
         ${allImages.length > 1 ? `
-          <div class="thumbs">
+          <div class="thumbs-row">
             ${allImages.map((img, i) => 
-              `<img class="thumb ${i === 0 ? 'selected' : ''}" src="images/${encodeURI(img)}" alt="Thumbnail ${i + 1}" data-img-src="images/${encodeURI(img)}" onerror="this.style.display='none'" />`
+              `<button class="thumb-cell ${i === 0 ? 'selected' : ''}" data-img-src="images/${encodeURI(img)}" aria-label="View photo ${i + 1}">
+                <img src="images/${encodeURI(img)}" alt="Thumbnail ${i + 1}" onerror="this.parentElement.style.display='none'" />
+              </button>`
             ).join('')}
           </div>
         ` : ''}
       </div>
 
-      <div class="modal-info">
-        <div class="modal-badge-row">
-          <span class="badge ${isOut ? 'badge-out' : 'badge-in'}">${safeAvail}</span>
-          <span class="product-code">Code: <strong>${safeCode}</strong></span>
+      <div class="modal-details">
+        <div class="modal-meta-row">
+          <span class="badge-stock ${isOut ? 'out' : 'in'}">${safeAvail}</span>
+          <span class="modal-code">Code: <strong>${safeCode}</strong></span>
         </div>
         <h2 id="modal-title" class="modal-title">${safeName}</h2>
-        <div class="modal-price-row">
+        <div class="modal-price-stack">
           <span class="price-discounted">${formatPrice(p.discountedPrice)}</span>
           ${p.originalPrice > p.discountedPrice ? `<span class="price-original">${formatPrice(p.originalPrice)}</span>` : ''}
         </div>
         <p class="modal-desc">${safeDesc}</p>
 
-        <div class="modal-action-bar">
-          <button class="btn-whatsapp btn-modal-order" data-buy-code='${escapeJS(p.code)}' ${isOut ? 'disabled' : ''}>
-            <span>Order via WhatsApp</span>
+        <div class="modal-action-stack">
+          <button class="btn-primary-whatsapp btn-modal-buy" data-buy-code='${escapeJS(p.code)}' ${isOut ? 'disabled' : ''}>
+            <span class="btn-text">Order via WhatsApp</span>
           </button>
-          <button class="btn-add btn-modal-add" data-add-code='${escapeJS(p.code)}' ${isOut ? 'disabled' : ''}>
+          <button class="btn-secondary-cart btn-modal-add" data-add-code='${escapeJS(p.code)}' ${isOut ? 'disabled' : ''}>
             Add to Cart
           </button>
         </div>
@@ -240,9 +301,9 @@ function updateCartUI() {
 
   if (cart.length === 0) {
     drawer.innerHTML = `
-      <div class="empty-cart-state">
-        <span style="font-size:2.5rem;">🛍️</span>
-        <p>Your shopping cart is empty.</p>
+      <div class="empty-cart-view">
+        <span class="material-symbols-outlined empty-cart-icon">shopping_bag</span>
+        <p class="empty-cart-text">Your cart is currently empty.</p>
       </div>
     `;
   } else {
@@ -251,15 +312,19 @@ function updateCartUI() {
       total += itemSubtotal;
       return `
         <div class="cart-item">
-          <img class="cart-item-img" src="images/${encodeURI(item.mainImage)}" alt="${escapeHTML(item.name)}" onerror="this.src='images/logo.png'" />
-          <div class="cart-item-details">
-            <div class="cart-item-title">${escapeHTML(item.name)}</div>
-            <div class="cart-item-price">${formatPrice(item.discountedPrice)}</div>
-            <div class="cart-qty-bar">
-              <button class="qty-btn" data-action="dec" data-index="${i}" aria-label="Decrease quantity">−</button>
-              <span class="qty-num">${item.qty}</span>
-              <button class="qty-btn" data-action="inc" data-index="${i}" aria-label="Increase quantity">+</button>
-              <button class="remove-btn" data-action="remove" data-index="${i}" aria-label="Remove item">🗑️</button>
+          <img class="cart-item-thumb" src="images/${encodeURI(item.mainImage)}" alt="${escapeHTML(item.name)}" onerror="this.src='images/logo.png'" />
+          <div class="cart-item-info">
+            <h4 class="cart-item-name">${escapeHTML(item.name)}</h4>
+            <div class="cart-item-pricing">${formatPrice(item.discountedPrice)}</div>
+            <div class="cart-item-controls">
+              <div class="qty-stepper">
+                <button class="qty-btn" data-action="dec" data-index="${i}" aria-label="Decrease quantity">−</button>
+                <span class="qty-value">${item.qty}</span>
+                <button class="qty-btn" data-action="inc" data-index="${i}" aria-label="Increase quantity">+</button>
+              </div>
+              <button class="cart-remove-btn" data-action="remove" data-index="${i}" aria-label="Remove item">
+                <span class="material-symbols-outlined">delete_outline</span>
+              </button>
             </div>
           </div>
         </div>
@@ -270,7 +335,6 @@ function updateCartUI() {
 
   const totalQty = cart.reduce((sum, it) => sum + it.qty, 0);
 
-  // Cart Badge in Header
   const badge = document.getElementById("cart-badge");
   if (badge) {
     badge.textContent = totalQty;
@@ -312,18 +376,43 @@ function toggleCart() {
   document.body.classList.toggle("cart-open", isOpen);
 }
 
-function checkoutWhatsApp() {
-  if (cart.length === 0) return alert("Your cart is empty.");
+// Single-product direct purchase with Rate Limiting
+function buyNow(code, sourceBtn) {
+  const p = findProductByCode(code);
+  if (!p) return;
 
-  let msg = `Hi The Accessory Dock, I would like to order the following items:\n\n`;
+  if (!checkOrderRateLimit(sourceBtn)) return;
+
+  const msg = `Hi The Accessory Dock, I want to order this item:\n\n` +
+    `• Product: ${p.name}\n` +
+    `• Code: ${p.code}\n` +
+    `• Price: ${formatPrice(p.discountedPrice)}\n` +
+    `• Availability: ${p.availability}\n\n` +
+    `Please confirm stock and delivery details.`;
+
+  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank");
+}
+
+// Full Cart checkout with Rate Limiting
+function checkoutWhatsApp(sourceBtn) {
+  if (cart.length === 0) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  if (!checkOrderRateLimit(sourceBtn)) return;
+
+  let msg = `Hi The Accessory Dock, I would like to order the following accessories:\n\n`;
 
   cart.forEach((item, index) => {
-    msg += `${index + 1}. ${item.name} (${item.code})\n   Qty: ${item.qty} × ${formatPrice(item.discountedPrice)} = ${formatPrice(item.qty * item.discountedPrice)}\n`;
+    msg += `${index + 1}. ${item.name} (${item.code})\n` +
+           `   Quantity: ${item.qty} × ${formatPrice(item.discountedPrice)} = ${formatPrice(item.qty * item.discountedPrice)}\n`;
   });
 
   const total = cart.reduce((sum, item) => sum + item.qty * item.discountedPrice, 0);
-  msg += `\nTotal Amount: ${formatPrice(total)}`;
-  msg += `\n\nPlease let me know the payment and delivery details!`;
+  msg += `\nTotal Amount: ${formatPrice(total)}\n\n` +
+         `Please provide the payment and delivery instructions.`;
 
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, "_blank");
@@ -334,51 +423,47 @@ function checkoutWhatsApp() {
   toggleCart();
 }
 
-function buyNow(code) {
-  const p = findProductByCode(code);
-  if (!p) return;
-
-  const msg = `Hi The Accessory Dock, I want to order this item:\n\n• ${p.name}\nCode: ${p.code}\nPrice: ${formatPrice(p.discountedPrice)}\nAvailability: ${p.availability}\n\nPlease confirm availability and delivery!`;
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, "_blank");
-}
-
-// Search Handler
+// Search Filter Input
 document.getElementById("search").addEventListener("input", () => {
   filterAndRender();
 });
 
-// UI Event Listeners
+// Navigation & Actions Event Listeners
 document.getElementById('cart-toggle-btn').addEventListener('click', toggleCart);
 document.getElementById('cart-close-btn').addEventListener('click', toggleCart);
 document.getElementById('cart-overlay').addEventListener('click', toggleCart);
 document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-document.getElementById('checkout-btn').addEventListener('click', checkoutWhatsApp);
+document.getElementById('checkout-btn').addEventListener('click', (e) => {
+  checkoutWhatsApp(e.currentTarget);
+});
 
-// Category Navigation
+// Category Navigation Delegation
 document.getElementById('categories').addEventListener('click', (e) => {
-  const btn = e.target.closest('.cat-btn');
+  const btn = e.target.closest('.cat-pill');
   if (!btn) return;
   setCategory(btn.dataset.category || "");
 });
 
-// Products Delegation
+// Products Grid Delegation (Card clicks & buttons)
 document.getElementById('products').addEventListener('click', (e) => {
-  const addBtn = e.target.closest('.btn-add');
+  const addBtn = e.target.closest('.btn-card-add');
   if (addBtn && addBtn.dataset.code) {
-    addToCart(addBtn.dataset.code);
+    addToCart(addBtn.dataset.code, addBtn);
     return;
   }
-  const buyBtn = e.target.closest('.btn-whatsapp');
+
+  const buyBtn = e.target.closest('.btn-card-buy');
   if (buyBtn && buyBtn.dataset.code) {
-    buyNow(buyBtn.dataset.code);
+    buyNow(buyBtn.dataset.code, buyBtn);
     return;
   }
-  const img = e.target.closest('img.product-image');
-  if (img && img.dataset.code) {
-    openModal(img.dataset.code);
+
+  const imgWrap = e.target.closest('.card-img-wrap');
+  if (imgWrap && imgWrap.dataset.code) {
+    openModal(imgWrap.dataset.code);
     return;
   }
+
   const title = e.target.closest('.product-title');
   if (title && title.dataset.code) {
     openModal(title.dataset.code);
@@ -392,21 +477,24 @@ document.getElementById('product-modal').addEventListener('click', (e) => {
     closeModal();
     return;
   }
-  const buy = e.target.closest('[data-buy-code]');
-  if (buy) {
-    buyNow(buy.getAttribute('data-buy-code'));
+
+  const buy = e.target.closest('.btn-modal-buy');
+  if (buy && buy.dataset.buyCode) {
+    buyNow(buy.dataset.buyCode, buy);
     return;
   }
-  const add = e.target.closest('[data-add-code]');
-  if (add) {
-    addToCart(add.getAttribute('data-add-code'));
+
+  const add = e.target.closest('.btn-modal-add');
+  if (add && add.dataset.addCode) {
+    addToCart(add.dataset.addCode, add);
     closeModal();
     return;
   }
-  const thumb = e.target.closest('.thumb');
+
+  const thumb = e.target.closest('.thumb-cell');
   if (thumb && thumb.dataset.imgSrc) {
     changeModalImage(thumb.dataset.imgSrc);
-    document.querySelectorAll('#product-modal .thumb').forEach(t => t.classList.remove('selected'));
+    document.querySelectorAll('#product-modal .thumb-cell').forEach(t => t.classList.remove('selected'));
     thumb.classList.add('selected');
   }
 });
@@ -433,13 +521,12 @@ document.getElementById('cart-items').addEventListener('click', (e) => {
   else if (action === 'remove') removeItem(idx);
 });
 
-// Floating dark mode toggle
-const darkBtn = document.createElement('button');
-darkBtn.textContent = '🌙';
-darkBtn.className = 'floating-dark-toggle';
-darkBtn.setAttribute('aria-label', 'Toggle dark mode');
-darkBtn.setAttribute('title', 'Toggle dark mode');
-document.body.appendChild(darkBtn);
-darkBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-});
+// Floating Theme Toggle
+const themeToggleBtn = document.getElementById('theme-toggle');
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    themeToggleBtn.querySelector('.material-symbols-outlined').textContent = isDark ? 'light_mode' : 'dark_mode';
+  });
+}

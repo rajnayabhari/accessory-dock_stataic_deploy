@@ -50,8 +50,8 @@ flowchart TD
     end
 
     subgraph ExternalServices["External Endpoints"]
-        WhatsAppAPI["WhatsApp API (wa.me/9779761806448)<br/>• Direct Product Inquiry<br/>• Formatted Cart Order Summary"]
-        GoogleFonts["Google Fonts (Inter: 400, 500, 600, 700, 800)"]
+        WhatsAppAPI["WhatsApp API (wa.me/9779761806448)<br/>• Direct Product Inquiry<br/>• Formatted Cart Order Summary<br/>• 2.5s Rate Limiter & Debounce"]
+        GoogleFonts["Google Fonts (Plus Jakarta Sans & Material Symbols)"]
     end
 
     %% Client Access Routes
