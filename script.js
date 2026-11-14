@@ -112,7 +112,7 @@ function renderProducts(list) {
     const loadingAttr = idx < 4 ? 'eager' : 'lazy';
 
     return `
-      <article class="product-card ${isOut ? 'out-of-stock' : ''}">
+      <article class="product-card ${isOut ? 'out-of-stock' : ''}" data-code=${codeArg}>
         <div class="card-img-wrap" data-code=${codeArg}>
           <img class="product-image" data-code=${codeArg} src="images/${encodeURI(p.mainImage)}" loading="${loadingAttr}" decoding="async" alt="${safeName}" onerror="this.src='images/logo.png'" />
           ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
@@ -123,16 +123,14 @@ function renderProducts(list) {
             <span class="card-code">${escapeHTML(p.code)}</span>
           </div>
           <h3 class="product-title" data-code=${codeArg} title="${safeName}">${safeName}</h3>
-          <div class="price-stack">
-            <span class="price-discounted">${formatPrice(p.discountedPrice)}</span>
-            ${p.originalPrice > p.discountedPrice ? `<span class="price-original">${formatPrice(p.originalPrice)}</span>` : ''}
-          </div>
-          <div class="card-actions">
-            <button class="btn-card-add" data-code=${codeArg} ${isOut ? 'disabled' : ''}>
-              ${isOut ? 'Out of Stock' : 'Add to Cart'}
-            </button>
-            <button class="btn-card-buy" data-code=${codeArg} ${isOut ? 'disabled' : ''} aria-label="Direct order ${safeName} on WhatsApp">
-              Buy Now
+          <div class="card-bottom-row">
+            <div class="price-stack">
+              <span class="price-discounted">${formatPrice(p.discountedPrice)}</span>
+              ${p.originalPrice > p.discountedPrice ? `<span class="price-original">${formatPrice(p.originalPrice)}</span>` : ''}
+            </div>
+            <button class="btn-card-add ${isOut ? 'disabled' : ''}" data-code=${codeArg} ${isOut ? 'disabled' : ''} aria-label="Add ${safeName} to cart">
+              <span class="material-symbols-outlined btn-add-icon">add</span>
+              <span class="btn-add-label">${isOut ? 'Sold Out' : 'Add'}</span>
             </button>
           </div>
         </div>
@@ -167,13 +165,13 @@ function addToCart(code, sourceBtn) {
 
   // Visual button feedback
   if (sourceBtn && !sourceBtn.disabled) {
-    const originalText = sourceBtn.textContent;
-    sourceBtn.textContent = "Added ✓";
+    const originalText = sourceBtn.innerHTML;
+    sourceBtn.innerHTML = `<span>Added</span>`;
     sourceBtn.classList.add("added-feedback");
     setTimeout(() => {
-      sourceBtn.textContent = originalText;
+      sourceBtn.innerHTML = originalText;
       sourceBtn.classList.remove("added-feedback");
-    }, 800);
+    }, 700);
   }
 }
 
@@ -341,15 +339,22 @@ function updateCartUI() {
     badge.style.display = totalQty > 0 ? "inline-flex" : "none";
   }
 
-  const summary = document.getElementById("cart-summary");
-  if (summary) summary.textContent = `${totalQty} item${totalQty === 1 ? '' : 's'} | ${formatPrice(total)}`;
-
   const totalEl = document.getElementById("cart-total");
   if (totalEl) totalEl.textContent = formatPrice(total);
 
   const checkoutBtn = document.getElementById("checkout-btn");
   if (checkoutBtn) {
     checkoutBtn.disabled = cart.length === 0;
+  }
+
+  // Mobile Bottom Cart Bar
+  const mobileBar = document.getElementById("mobile-cart-bar");
+  if (mobileBar) {
+    mobileBar.classList.toggle("hidden", totalQty === 0);
+    const countEl = document.getElementById("bar-cart-count");
+    if (countEl) countEl.textContent = `${totalQty} item${totalQty === 1 ? '' : 's'}`;
+    const totalBarEl = document.getElementById("bar-cart-total");
+    if (totalBarEl) totalBarEl.textContent = formatPrice(total);
   }
 }
 
@@ -397,7 +402,7 @@ function buyNow(code, sourceBtn) {
 // Full Cart checkout with Rate Limiting
 function checkoutWhatsApp(sourceBtn) {
   if (cart.length === 0) {
-    alert("Your cart is empty.");
+    showToast("Your cart is empty.");
     return;
   }
 
@@ -437,6 +442,11 @@ document.getElementById('checkout-btn').addEventListener('click', (e) => {
   checkoutWhatsApp(e.currentTarget);
 });
 
+const barCheckoutBtn = document.getElementById('bar-checkout-btn');
+if (barCheckoutBtn) {
+  barCheckoutBtn.addEventListener('click', toggleCart);
+}
+
 // Category Navigation Delegation
 document.getElementById('categories').addEventListener('click', (e) => {
   const btn = e.target.closest('.cat-pill');
@@ -458,15 +468,9 @@ document.getElementById('products').addEventListener('click', (e) => {
     return;
   }
 
-  const imgWrap = e.target.closest('.card-img-wrap');
-  if (imgWrap && imgWrap.dataset.code) {
-    openModal(imgWrap.dataset.code);
-    return;
-  }
-
-  const title = e.target.closest('.product-title');
-  if (title && title.dataset.code) {
-    openModal(title.dataset.code);
+  const card = e.target.closest('.product-card');
+  if (card && card.dataset.code) {
+    openModal(card.dataset.code);
     return;
   }
 });
@@ -521,12 +525,24 @@ document.getElementById('cart-items').addEventListener('click', (e) => {
   else if (action === 'remove') removeItem(idx);
 });
 
-// Floating Theme Toggle
-const themeToggleBtn = document.getElementById('theme-toggle');
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener('click', () => {
+// Theme Toggle
+const themeBtn = document.getElementById('theme-toggle-btn') || document.getElementById('theme-toggle');
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
-    themeToggleBtn.querySelector('.material-symbols-outlined').textContent = isDark ? 'light_mode' : 'dark_mode';
+    try {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    } catch (e) {}
+    const icon = themeBtn.querySelector('.material-symbols-outlined');
+    if (icon) icon.textContent = isDark ? 'light_mode' : 'dark_mode';
   });
+
+  try {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+      const icon = themeBtn.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = 'light_mode';
+    }
+  } catch (e) {}
 }

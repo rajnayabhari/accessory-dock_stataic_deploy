@@ -27,12 +27,13 @@ flowchart TD
     end
 
     subgraph StorefrontComponents["Storefront Components & UI Modules"]
-        HeaderMod["Header Component<br/>• Circular Emblem Logo<br/>• Brand Title<br/>• Cart Pill with Live Count<br/>• Full-Width Search Input"]
-        HeroMod["Hero Component<br/>• Value Proposition<br/>• Trust Chips (Genuine, Fast, Support)"]
+        HeaderMod["Header Component<br/>• Circular Emblem Logo<br/>• Brand Title & Quality Subtitle<br/>• Cart Pill with Live Count<br/>• Integrated Search Input<br/>• Zero-Overlap Category Pills"]
+        TrustMod["Trust Pillars Section<br/>• Genuine Products<br/>• Fast Delivery Across Nepal<br/>• Affordable Prices<br/>• Dedicated WhatsApp Support"]
         CategoryNav["Category Nav (#categories)<br/>• Horizontal Snap-Scroll Pills<br/>• Dynamic Filter By Category"]
-        ProductGrid["Product Grid (#products)<br/>• Mobile 2-Column Cards<br/>• Aspect-Ratio 1:1 Images<br/>• Discount & Stock Badges<br/>• Add to Cart & Buy Now Buttons"]
-        DetailModal["Product Modal (#product-modal)<br/>• Mobile Bottom-Sheet Slide Up<br/>• Deduplicated Thumbnail Carousel<br/>• Direct WhatsApp Order Action"]
-        CartDrawer["Cart Drawer (#cart-drawer)<br/>• Slide-in Panel with Close '✕'<br/>• Quantity +/- Controls & Delete<br/>• Total Price Summary<br/>• WhatsApp Order Handoff"]
+        ProductGrid["Product Grid (#products)<br/>• Mobile 2-Column Responsive Cards<br/>• Aspect-Ratio 1:1 Inset Images<br/>• Price Stack & Quick '+ Add' Button<br/>• Tap Card to Open Bottom Sheet"]
+        DetailModal["Product Modal (#product-modal)<br/>• Mobile Bottom-Sheet Slide Up<br/>• Drag Handle & Deduplicated Thumbnails<br/>• Primary WhatsApp Direct Order Action"]
+        MobileCartBar["Floating Mobile Cart Bar (#mobile-cart-bar)<br/>• Safe-Area Thumb Reach<br/>• Live Count & Total Amount<br/>• One-Tap Checkout Trigger"]
+        CartDrawer["Cart Drawer (#cart-drawer)<br/>• Slide-in Panel with Dispatch Banner<br/>• Quantity +/- Steppers & Delete<br/>• Order Total & WhatsApp Dispatch"]
         ThemeToggle["Dark Mode Toggle<br/>• Sleek Floating 🌙 Pill"]
     end
 

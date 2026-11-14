@@ -4,6 +4,30 @@ This document tracks all changes, architectural improvements, bug fixes, and fea
 
 ---
 
+## [v1.4.0] – Complete Mobile-First Architecture Overhaul & Thumb Ergonomics
+**Date:** 2026-11-14 (19:05 NPT)  
+**Deploy URL:** `https://the-accessory-dock.vercel.app`
+
+### Summary of Changes
+1. **True Mobile-First Screen Hierarchy**
+   - **Unified Sticky Header**: Integrated the brand row, dark mode toggle, cart bag pill, search bar, and horizontal category pills into a single sticky container with 0 scroll overlap or collision on any mobile viewport.
+   - **Moved Trust Pillars to Bottom**: Relocated the 4 seal trust items from pushing products down the fold to right above the footer, immediately highlighting accessories upon first load.
+   - **Mobile 2-Column Grid Ergonomics**: Streamlined product cards with a 1:1 recessed image container, discrete stock badge, 2-line title, and a compact bottom row (left: price stack; right: thumb-friendly `+ Add` button).
+   - **Mobile Quick-View Bottom Sheet**: Tapping any product card opens an authentic bottom sheet modal with smooth slide-up animation, drag handle, image thumbnails, full specs, and primary WhatsApp direct order CTA.
+2. **Floating Bottom Cart Bar (`#mobile-cart-bar`)**
+   - Implemented a floating bottom cart bar that automatically appears when items are added to the shopper's cart.
+   - Positioned cleanly within thumb reach using `calc(12px + env(safe-area-inset-bottom))` to respect iOS home indicators and Android navigation bars.
+   - One-tap "View Cart • Order ➔" button allows rapid WhatsApp checkout from anywhere on the page.
+3. **Strict Zero-Emoji & Warm Botanical Polish**
+   - Verified zero emoji characters across HTML, CSS, and JavaScript.
+   - Replaced all icons with crisp Material Symbols Outlined.
+   - Clean color palette adhering to the Stitch design specifications.
+4. **Order Rate-Limiting & Duplicate Prevention**
+   - Strict 2.5s cooldown guard (`ORDER_COOLDOWN_MS = 2500ms`) and mutex lock preventing repeated taps from dispatching duplicate WhatsApp order messages.
+   - 450ms debounce on `addToCart()` to avoid accidental multi-taps.
+
+---
+
 ## [v1.3.0] – Warm Botanical Modernism Design Match & Order Rate Limiting
 **Date:** 2026-11-14 (18:52 NPT)  
 **Deploy URL:** `https://the-accessory-dock.vercel.app`
